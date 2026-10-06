@@ -19,8 +19,83 @@ export const translations = {
     nav_logout: "Log Out",
     nav_activity_logs: "Activity Logs",
 
-    // Section 01: Hero (The Opening)
-    hero_tag: "HOMELY · PHILOSOPHY & SYSTEM",
+    // Dashboard Tabs & Sidebars
+    sidebar_overview: "Overview",
+    sidebar_properties: "Properties",
+    sidebar_leases: "Leases & Tenants",
+    sidebar_maintenance: "Maintenance Board",
+    sidebar_financials: "Financial Ledger",
+    sidebar_documents: "Documents",
+    sidebar_messages: "Messages",
+    sidebar_profile: "My Profile",
+
+    // Overview & Metrics
+    metric_gross_rent: "Gross Rent",
+    metric_net_rent: "Net Yield",
+    metric_occupancy: "Occupancy Rate",
+    metric_active_maint: "Active Repairs",
+    quick_actions: "Quick Actions",
+    recent_activity: "Recent Activity",
+
+    // Actions & Buttons
+    btn_add_property: "+ Add Property",
+    btn_request_repair: "+ Request Repair",
+    btn_pay_rent: "Pay Rent",
+    btn_export_csv: "Export CSV",
+    btn_invite_tenant: "Invite Tenant",
+    btn_download_lease: "Download Lease",
+    btn_send_message: "Send Message",
+    btn_save_changes: "Save Changes",
+
+    // Properties
+    properties_title: "Properties Portfolio",
+    units_leased: "Leased Units",
+    vacant: "Vacant",
+    fully_leased: "Fully Leased",
+    units_distribution: "Units Distribution",
+    property_type: "Property Type",
+    target_rent: "Target Rent",
+    address: "Address",
+
+    // Leases & Tenants
+    leases_title: "Leases & Tenants",
+    lease_period: "Lease Period",
+    monthly_rent: "Monthly Rent",
+    deposit: "Security Deposit",
+    nif_number: "NIF Number",
+    iban: "IBAN",
+    rental_history: "Payment History",
+    verification_status: "EU Verification Status",
+    verified_income: "Verified Income (IRS)",
+
+    // Maintenance
+    maintenance_title: "Maintenance Coordination Board",
+    reported: "Reported",
+    in_progress: "In Progress",
+    completed: "Completed",
+    emergency: "Emergency",
+    high_priority: "High Priority",
+    medium_priority: "Medium Priority",
+    low_priority: "Low Priority",
+
+    // Financials
+    financials_title: "Financial Ledger & Taxes",
+    total_collected: "Total Collected",
+    pending_payments: "Pending Payments",
+    total_expenses: "Total Expenses",
+    payment_method: "Payment Method",
+    mbway: "MB WAY",
+    multibanco: "Multibanco / SEPA (IBAN)",
+    card: "Debit / Credit Card",
+
+    // Profile & Settings
+    profile_title: "Account & Settings",
+    full_name: "Full Name",
+    email_address: "Email Address",
+    phone_number: "Phone Number",
+
+    // Public Section 01: Hero
+    hero_tag: "HOMELY · PORTUGAL & EU SYSTEM",
     hero_headline: "A calmer way to manage property.",
     hero_subline: "Less administration. More living. Homely turns property management into one serene, direct visual experience.",
     hero_cta_primary: "Discover Homely &rarr;",
@@ -89,30 +164,7 @@ export const translations = {
 
     // Contact View Editorial
     contact_headline: "Let's make property feel simpler.",
-    contact_subline: "Have questions about Homely or setting up your portfolio? Reach out directly below.",
-
-    // Dashboard Sidebars & Common
-    sidebar_overview: "Overview",
-    sidebar_properties: "Properties",
-    sidebar_leases: "Leases & Tenants",
-    sidebar_maintenance: "Maintenance Board",
-    sidebar_financials: "Financial Ledger",
-    sidebar_documents: "Documents",
-    sidebar_messages: "Messages",
-    sidebar_profile: "My Profile",
-
-    // Metrics
-    metric_gross_rent: "Gross Rent",
-    metric_net_rent: "Net Rent",
-    metric_occupancy: "Occupancy Rate",
-    metric_active_maint: "Active Maintenance",
-
-    // Actions & Buttons
-    btn_add_property: "+ Add Property",
-    btn_request_repair: "+ Request Repair",
-    btn_pay_rent: "Pay Rent",
-    btn_export_csv: "Export CSV",
-    btn_invite_tenant: "Invite Tenant"
+    contact_subline: "Have questions about Homely or setting up your portfolio? Reach out directly below."
   },
   pt: {
     // Navigation
@@ -127,8 +179,83 @@ export const translations = {
     nav_logout: "Terminar Sessão",
     nav_activity_logs: "Registo de Atividades",
 
-    // Section 01: Hero (The Opening)
-    hero_tag: "HOMELY · FILOSOFIA & SISTEMA",
+    // Dashboard Tabs & Sidebars
+    sidebar_overview: "Visão Geral",
+    sidebar_properties: "Imóveis",
+    sidebar_leases: "Contratos & Inquilinos",
+    sidebar_maintenance: "Gestão de Reparações",
+    sidebar_financials: "Registo Financeiro",
+    sidebar_documents: "Documentos",
+    sidebar_messages: "Mensagens",
+    sidebar_profile: "O Meu Perfil",
+
+    // Overview & Metrics
+    metric_gross_rent: "Renda Bruta",
+    metric_net_rent: "Rendimento Líquido",
+    metric_occupancy: "Taxa de Ocupação",
+    metric_active_maint: "Reparações Ativas",
+    quick_actions: "Ações Rápidas",
+    recent_activity: "Atividade Recente",
+
+    // Actions & Buttons
+    btn_add_property: "+ Adicionar Imóvel",
+    btn_request_repair: "+ Pedir Reparação",
+    btn_pay_rent: "Pagar Renda",
+    btn_export_csv: "Exportar CSV",
+    btn_invite_tenant: "Convidar Inquilino",
+    btn_download_lease: "Descarregar Contrato",
+    btn_send_message: "Enviar Mensagem",
+    btn_save_changes: "Guardar Alterações",
+
+    // Properties
+    properties_title: "Portfólio de Imóveis",
+    units_leased: "Frações Arrendadas",
+    vacant: "Disponível",
+    fully_leased: "Totalmente Arrendado",
+    units_distribution: "Distribuição das Frações",
+    property_type: "Tipo de Imóvel",
+    target_rent: "Renda Prevista",
+    address: "Morada",
+
+    // Leases & Tenants
+    leases_title: "Contratos & Inquilinos",
+    lease_period: "Duração do Contrato",
+    monthly_rent: "Renda Mensal",
+    deposit: "Caução",
+    nif_number: "Número NIF",
+    iban: "IBAN",
+    rental_history: "Histórico de Pagamentos",
+    verification_status: "Estado de Verificação NIF/IRS",
+    verified_income: "Rendimentos Verificados (IRS)",
+
+    // Maintenance
+    maintenance_title: "Gestão de Reparações",
+    reported: "Registado",
+    in_progress: "Em Resolução",
+    completed: "Concluído",
+    emergency: "Emergência",
+    high_priority: "Prioridade Alta",
+    medium_priority: "Prioridade Média",
+    low_priority: "Prioridade Baixa",
+
+    // Financials
+    financials_title: "Registo Financeiro & Recibos",
+    total_collected: "Total Recebido",
+    pending_payments: "Rendas Pendentes",
+    total_expenses: "Total de Despesas",
+    payment_method: "Método de Pagamento",
+    mbway: "MB WAY",
+    multibanco: "Multibanco / SEPA (IBAN)",
+    card: "Cartão de Débito / Crédito",
+
+    // Profile & Settings
+    profile_title: "Conta & Definições",
+    full_name: "Nome Completo",
+    email_address: "Endereço de E-mail",
+    phone_number: "Telefone / Telemóvel",
+
+    // Public Section 01: Hero
+    hero_tag: "HOMELY · SISTEMA PARA PORTUGAL E UE",
     hero_headline: "Uma forma mais serena de gerir imóveis.",
     hero_subline: "Menos burocracia. Mais vida. O Homely transforma a gestão imobiliária numa experiência visual serena e direta.",
     hero_cta_primary: "Descobrir o Homely &rarr;",
@@ -187,7 +314,7 @@ export const translations = {
     // Section 09: The People Behind Homely
     human_eyebrow: "SOBRE O HOMELY",
     human_title: "Criado para proprietários que valorizam a qualidade.",
-    human_desc: "Criámos o Homely para devolver a clareza e a elegância à gestão de imóveis. As habitações são mais do que ativos; são o espaço onde a vida acontece.",
+    human_desc: "Criámos o Homely para devolver a clareza e a elegância à gestão de imóveis. As habitações são mais do que ativos; são o espaço onde a vida acontecem.",
 
     // Section 10: Final Statement
     cta_headline: "Pronto para uma gestão imobiliária mais serena?",
@@ -197,30 +324,7 @@ export const translations = {
 
     // Contact View Editorial
     contact_headline: "Vamos simplificar a gestão do seu imóvel.",
-    contact_subline: "Tem questões sobre o Homely ou pretende configurar o seu portfólio? Contacte-nos diretamente abaixo.",
-
-    // Dashboard Sidebars & Common
-    sidebar_overview: "Visão Geral",
-    sidebar_properties: "Imóveis",
-    sidebar_leases: "Contratos e Inquilinos",
-    sidebar_maintenance: "Gestão de Reparações",
-    sidebar_financials: "Registo Financeiro",
-    sidebar_documents: "Documentos",
-    sidebar_messages: "Mensagens",
-    sidebar_profile: "O Meu Perfil",
-
-    // Metrics
-    metric_gross_rent: "Renda Bruta",
-    metric_net_rent: "Renda Líquida",
-    metric_occupancy: "Taxa de Ocupação",
-    metric_active_maint: "Reparações Ativas",
-
-    // Actions & Buttons
-    btn_add_property: "+ Adicionar Imóvel",
-    btn_request_repair: "+ Pedir Reparação",
-    btn_pay_rent: "Pagar Renda",
-    btn_export_csv: "Exportar CSV",
-    btn_invite_tenant: "Convidar Inquilino"
+    contact_subline: "Tem questões sobre o Homely ou pretende configurar o seu portfólio? Contacte-nos diretamente abaixo."
   }
 };
 
