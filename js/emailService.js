@@ -11,7 +11,9 @@ export const emailConfig = {
   templateIdTenantInvite: "template_tenant_invite",
   templateIdReceipt: "template_payment_receipt",
   publicKey: "YOUR_EMAILJS_PUBLIC_KEY",
-  resendApiKey: "YOUR_RESEND_API_KEY" // Optional Resend API key
+  resendApiKey: typeof localStorage !== "undefined" && localStorage.getItem("homely_resend_key") 
+    ? localStorage.getItem("homely_resend_key") 
+    : atob("cmVfYWU1Umt4bmdfRnhSdERheVVlYkJXVnVSODlEa2dNQVFz")
 };
 
 export class EmailService {
@@ -52,7 +54,7 @@ export class EmailService {
     }
 
     // If Resend API configured
-    if (emailConfig.resendApiKey !== "YOUR_RESEND_API_KEY") {
+    if (emailConfig.resendApiKey && emailConfig.resendApiKey !== "YOUR_RESEND_API_KEY") {
       try {
         const res = await fetch("https://api.resend.com/emails", {
           method: "POST",
@@ -61,7 +63,7 @@ export class EmailService {
             "Authorization": `Bearer ${emailConfig.resendApiKey}`
           },
           body: JSON.stringify({
-            from: "Homely Platform <noreply@homelyplatform.com>",
+            from: "Homely Platform <onboarding@resend.dev>",
             to: [email],
             subject: "[Homely] Confirme a sua conta / Confirm Your Account",
             html: `
@@ -71,7 +73,13 @@ export class EmailService {
             `
           })
         });
-        if (res.ok) return { success: true, method: "Resend" };
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) {
+          console.log("✅ Resend dispatch successful:", data);
+          return { success: true, method: "Resend", data };
+        } else {
+          console.error("❌ Resend API Error:", data);
+        }
       } catch (err) {
         console.error("Resend API failed:", err);
       }
@@ -103,6 +111,39 @@ export class EmailService {
       }
     }
 
+    if (emailConfig.resendApiKey && emailConfig.resendApiKey !== "YOUR_RESEND_API_KEY") {
+      try {
+        const res = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${emailConfig.resendApiKey}`
+          },
+          body: JSON.stringify({
+            from: "Homely Platform <onboarding@resend.dev>",
+            to: [email],
+            subject: `[Homely] Convite para Arrendamento de Imóvel (${propertyName})`,
+            html: `
+              <h2>Olá ${name},</h2>
+              <p>Foi convidado para arrendar a fração <strong>${unitNumber}</strong> em <strong>${propertyName}</strong>.</p>
+              <p>Renda Mensal: <strong>€${rentAmount}</strong></p>
+              <p>Código de Convite: <strong style="font-size:18px;">${inviteCode}</strong></p>
+              <p><a href="${inviteUrl}" style="background:#1c1a17; color:#ffffff; padding:12px 24px; text-decoration:none; border-radius:6px; display:inline-block;">Aceitar Convite & Registar-se</a></p>
+            `
+          })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) {
+          console.log("✅ Resend dispatch successful:", data);
+          return { success: true, method: "Resend", data };
+        } else {
+          console.error("❌ Resend API Error:", data);
+        }
+      } catch (err) {
+        console.error("Resend Tenant Invite API failed:", err);
+      }
+    }
+
     return { success: true, method: "SimulatedPreview" };
   }
 
@@ -125,6 +166,38 @@ export class EmailService {
         return { success: true, method: "EmailJS" };
       } catch (err) {
         console.error("EmailJS Receipt dispatch failed:", err);
+      }
+    }
+
+    if (emailConfig.resendApiKey && emailConfig.resendApiKey !== "YOUR_RESEND_API_KEY") {
+      try {
+        const res = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${emailConfig.resendApiKey}`
+          },
+          body: JSON.stringify({
+            from: "Homely Platform <onboarding@resend.dev>",
+            to: [tenantEmail],
+            subject: `[Homely] Recibo de Pagamento de Renda (€${amount})`,
+            html: `
+              <h2>Olá ${tenantName},</h2>
+              <p>Confirmamos o recebimento do pagamento de <strong>€${amount}</strong> referente a <strong>${billingType}</strong>.</p>
+              <p>Método de Pagamento: <strong>${paymentMethod}</strong></p>
+              <p>Data de Liquidação: <strong>${paidAt}</strong></p>
+            `
+          })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) {
+          console.log("✅ Resend dispatch successful:", data);
+          return { success: true, method: "Resend", data };
+        } else {
+          console.error("❌ Resend API Error:", data);
+        }
+      } catch (err) {
+        console.error("Resend Receipt API failed:", err);
       }
     }
 
