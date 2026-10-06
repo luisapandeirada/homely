@@ -1,10 +1,6 @@
-/**
- * Homely - Owner View Controller (Invitations Expansion)
- * Handles layout rendering for real estate owners.
- */
-
 import { store } from "../store.js";
 import { renderFinancialChart, renderOccupancyGauge, createDialog, toast, downloadCSV, renderFloorPlan } from "../components.js";
+import { t } from "../i18n.js";
 
 export function renderOwnerView(container) {
   const properties = store.getProperties();
@@ -21,31 +17,31 @@ export function renderOwnerView(container) {
       <!-- Side Menu -->
       <aside class="dashboard-sidebar">
         <div class="sidebar-item ${activeTab === 'summary' ? 'active' : ''}" data-tab="summary">
-          <span class="sidebar-icon">📈</span> Overview
+          <span class="sidebar-icon">📈</span> ${t("sidebar_overview")}
         </div>
         <div class="sidebar-item ${activeTab === 'properties' ? 'active' : ''}" data-tab="properties">
-          <span class="sidebar-icon">🏢</span> Properties
+          <span class="sidebar-icon">🏢</span> ${t("sidebar_properties")}
         </div>
         <div class="sidebar-item ${activeTab === 'leases' ? 'active' : ''}" data-tab="leases">
-          <span class="sidebar-icon">✉️</span> Leases & Tenants
+          <span class="sidebar-icon">✉️</span> ${t("sidebar_leases")}
         </div>
         <div class="sidebar-item ${activeTab === 'maintenance' ? 'active' : ''}" data-tab="maintenance">
-          <span class="sidebar-icon">🔧</span> Maintenance Board
+          <span class="sidebar-icon">🔧</span> ${t("sidebar_maintenance")}
         </div>
         <div class="sidebar-item ${activeTab === 'financials' ? 'active' : ''}" data-tab="financials">
-          <span class="sidebar-icon">📊</span> Financial Ledger
+          <span class="sidebar-icon">📊</span> ${t("sidebar_financials")}
         </div>
         <div class="sidebar-item ${activeTab === 'documents' ? 'active' : ''}" data-tab="documents">
-          <span class="sidebar-icon">📄</span> Documents
+          <span class="sidebar-icon">📄</span> ${t("sidebar_documents")}
         </div>
         <div class="sidebar-item ${activeTab === 'messages' ? 'active' : ''}" data-tab="messages">
-          <span class="sidebar-icon">💬</span> Messages
+          <span class="sidebar-icon">💬</span> ${t("sidebar_messages")}
         </div>
         
         <div class="sidebar-separator"></div>
         
         <div class="sidebar-item ${activeTab === 'profile' ? 'active' : ''}" data-tab="profile">
-          <span class="sidebar-icon">👤</span> My Profile
+          <span class="sidebar-icon">👤</span> ${t("sidebar_profile")}
         </div>
       </aside>
 
@@ -1532,7 +1528,7 @@ function renderSummaryTab(targetElement, properties, requests, payments, users) 
       <div class="glass-panel metric-card">
         <div class="metric-icon">💰</div>
         <div class="metric-details">
-          <h4>Gross Rent</h4>
+          <h4>${t("metric_gross_rent")}</h4>
           <div class="value">$${totalPaid.toLocaleString()}</div>
         </div>
       </div>
@@ -1540,7 +1536,7 @@ function renderSummaryTab(targetElement, properties, requests, payments, users) 
       <div class="glass-panel metric-card">
         <div class="metric-icon">💸</div>
         <div class="metric-details">
-          <h4>Net Rent</h4>
+          <h4>${t("metric_net_rent")}</h4>
           <div class="value">$${netYield.toLocaleString()}</div>
         </div>
       </div>
@@ -1549,8 +1545,8 @@ function renderSummaryTab(targetElement, properties, requests, payments, users) 
         <div class="metric-icon">📈</div>
         <div class="metric-details" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
           <div style="flex:1;">
-            <h4>Occupancy Rate</h4>
-            <div class="value">${properties.length} Properties</div>
+            <h4>${t("metric_occupancy")}</h4>
+            <div class="value">${properties.length} ${t("sidebar_properties")}</div>
           </div>
           <div id="occupancy-gauge-mount" style="width: 80px; height: 80px;"></div>
         </div>
@@ -1559,7 +1555,7 @@ function renderSummaryTab(targetElement, properties, requests, payments, users) 
       <div class="glass-panel metric-card">
         <div class="metric-icon">🔧</div>
         <div class="metric-details">
-          <h4>Active Maintenance</h4>
+          <h4>${t("metric_active_maint")}</h4>
           <div class="value">${activeRequests} Pending</div>
         </div>
       </div>

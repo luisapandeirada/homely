@@ -5,6 +5,7 @@
 
 import { store } from "../store.js";
 import { createDialog, toast, initSignaturePad, renderStripeSplitDiagram } from "../components.js";
+import { t } from "../i18n.js";
 
 export function renderTenantView(container) {
   const tenant = store.getCurrentUser();
@@ -35,19 +36,19 @@ export function renderTenantView(container) {
       <!-- Side Menu -->
       <aside class="dashboard-sidebar">
         <div class="sidebar-item ${activeTab === 'dashboard' ? 'active' : ''}" data-tab="dashboard">
-          <span class="sidebar-icon">📈</span> Overview
+          <span class="sidebar-icon">📈</span> ${t("sidebar_overview")}
         </div>
         <div class="sidebar-item ${activeTab === 'documents' ? 'active' : ''}" data-tab="documents">
-          <span class="sidebar-icon">📄</span> Documents
+          <span class="sidebar-icon">📄</span> ${t("sidebar_documents")}
         </div>
         <div class="sidebar-item ${activeTab === 'chat' ? 'active' : ''}" data-tab="chat">
-          <span class="sidebar-icon">💬</span> Messages
+          <span class="sidebar-icon">💬</span> ${t("sidebar_messages")}
         </div>
         
         <div class="sidebar-separator"></div>
         
         <div class="sidebar-item ${activeTab === 'profile' ? 'active' : ''}" data-tab="profile">
-          <span class="sidebar-icon">👤</span> My Profile
+          <span class="sidebar-icon">👤</span> ${t("sidebar_profile")}
         </div>
       </aside>
 
@@ -63,7 +64,7 @@ export function renderTenantView(container) {
             </div>
           </div>
           <button class="btn btn-primary" id="file-request-btn" style="padding:10px 20px; font-size:13px; border-radius:30px; background:#ffffff; color:#1c1a17; border:none; font-weight:600;">
-            + Request Repair
+            ${t("btn_request_repair")}
           </button>
         </div>
 

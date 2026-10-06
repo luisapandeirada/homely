@@ -1,10 +1,6 @@
-/**
- * Homely - Public Website Views (Financial & Invitation Logic)
- * Renders Landing page, About Us, Contact Us, and Login/Signup forms.
- */
-
 import { store } from "../store.js";
 import { toast } from "../components.js";
+import { t } from "../i18n.js";
 
 // Helper to update active links in navigation bar
 function setActiveNavLink(routeId) {
@@ -29,20 +25,20 @@ export function renderLandingView(container, navigateTo) {
     <section class="hero-section" style="position:relative; width:100%; overflow:hidden; border-radius:20px; min-height:560px; display:flex; align-items:flex-end; background:linear-gradient(180deg, rgba(28,26,23,0.15) 0%, rgba(28,26,23,0.88) 100%), url('assets/property_modern.png') center/cover no-repeat; color:#ffffff; padding:72px 64px 64px 64px; margin-top:16px; margin-bottom:70px; box-shadow:var(--shadow-premium);">
       <div style="max-width:840px; position:relative; z-index:2;">
         <p style="font-family:var(--font-sans); font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:0.2em; color:rgba(255,255,255,0.8); margin-bottom:18px;">
-          Property & Tenancy Management
+          ${t("hero_tag")}
         </p>
         <h1 style="color:#ffffff; font-family:var(--font-serif); font-size:64px; font-weight:400; line-height:1.06; letter-spacing:-0.015em; margin-bottom:22px;">
-          Direct, simple management for your properties.
+          ${t("hero_title")}
         </h1>
         <p style="color:rgba(255,255,255,0.9); font-family:var(--font-sans); font-size:18px; line-height:1.65; margin-bottom:36px; font-weight:400; max-width:660px;">
-          A calm, quiet platform for property owners and residents. Clear financial tracking, direct rent payments, and simple maintenance coordination.
+          ${t("hero_desc")}
         </p>
         <div class="cta-group" style="display:flex; gap:16px; align-items:center;">
           <button class="btn btn-primary" id="landing-cta-owner" style="padding:14px 32px; font-size:14px; font-weight:600; border-radius:30px; background:#ffffff; color:#1c1a17; border:none; letter-spacing:0.02em; cursor:pointer;">
-            Landlord Portal
+            ${t("hero_cta_owner")}
           </button>
           <button class="btn btn-secondary" id="landing-cta-tenant" style="padding:14px 32px; font-size:14px; font-weight:500; border-radius:30px; background:rgba(255,255,255,0.18); color:#ffffff; border:1px solid rgba(255,255,255,0.35); backdrop-filter:blur(12px); cursor:pointer;">
-            Tenant Sign In
+            ${t("hero_cta_tenant")}
           </button>
         </div>
       </div>
@@ -52,10 +48,10 @@ export function renderLandingView(container, navigateTo) {
     <div style="margin-bottom: 70px;">
       <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:28px; padding-bottom:16px; border-bottom:1px solid var(--glass-border);">
         <div>
-          <p style="font-size:11px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.15em; margin-bottom:6px;">PROPERTIES</p>
-          <h2 style="font-size:32px; font-family:var(--font-serif); font-weight:400;">Featured Residences</h2>
+          <p style="font-size:11px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.15em; margin-bottom:6px;">${t("properties_tag")}</p>
+          <h2 style="font-size:32px; font-family:var(--font-serif); font-weight:400;">${t("properties_title")}</h2>
         </div>
-        <span style="font-size:13px; color:var(--text-muted); font-weight:400;">Direct occupancy and lease status</span>
+        <span style="font-size:13px; color:var(--text-muted); font-weight:400;">${t("properties_sub")}</span>
       </div>
 
       <div class="properties-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap:28px;">
@@ -86,24 +82,24 @@ export function renderLandingView(container, navigateTo) {
     <!-- Architectural Feature Columns -->
     <section style="margin-bottom:70px;">
       <div style="margin-bottom:32px; padding-bottom:16px; border-bottom:1px solid var(--glass-border);">
-        <p style="font-size:11px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.15em; margin-bottom:6px;">CAPABILITIES</p>
-        <h2 style="font-size:32px; font-family:var(--font-serif); font-weight:400;">Designed for Simplicity</h2>
+        <p style="font-size:11px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.15em; margin-bottom:6px;">${t("capabilities_tag")}</p>
+        <h2 style="font-size:32px; font-family:var(--font-serif); font-weight:400;">${t("capabilities_title")}</h2>
       </div>
       
       <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:28px;">
         <div class="glass-card" style="padding:32px; border-radius:12px; background:var(--glass-bg);">
-          <h3 style="font-family:var(--font-serif); font-size:20px; font-weight:500; margin-bottom:10px;">Clear Records</h3>
-          <p style="font-size:13px; color:var(--text-muted); line-height:1.65;">Track monthly rent collections, split expenses, and review straightforward financial summaries without clutter.</p>
+          <h3 style="font-family:var(--font-serif); font-size:20px; font-weight:500; margin-bottom:10px;">${t("cap1_title")}</h3>
+          <p style="font-size:13px; color:var(--text-muted); line-height:1.65;">${t("cap1_desc")}</p>
         </div>
 
         <div class="glass-card" style="padding:32px; border-radius:12px; background:var(--glass-bg);">
-          <h3 style="font-family:var(--font-serif); font-size:20px; font-weight:500; margin-bottom:10px;">Direct Payments</h3>
-          <p style="font-size:13px; color:var(--text-muted); line-height:1.65;">Digital rent settlement for residents with transparent payment receipts and clear due dates.</p>
+          <h3 style="font-family:var(--font-serif); font-size:20px; font-weight:500; margin-bottom:10px;">${t("cap2_title")}</h3>
+          <p style="font-size:13px; color:var(--text-muted); line-height:1.65;">${t("cap2_desc")}</p>
         </div>
 
         <div class="glass-card" style="padding:32px; border-radius:12px; background:var(--glass-bg);">
-          <h3 style="font-family:var(--font-serif); font-size:20px; font-weight:500; margin-bottom:10px;">Maintenance Coordination</h3>
-          <p style="font-size:13px; color:var(--text-muted); line-height:1.65;">Log maintenance requests directly, compare contractor options, and keep residents informed at every step.</p>
+          <h3 style="font-family:var(--font-serif); font-size:20px; font-weight:500; margin-bottom:10px;">${t("cap3_title")}</h3>
+          <p style="font-size:13px; color:var(--text-muted); line-height:1.65;">${t("cap3_desc")}</p>
         </div>
       </div>
     </section>
@@ -111,7 +107,7 @@ export function renderLandingView(container, navigateTo) {
     <!-- Editorial Quote Banner -->
     <section style="background:var(--glass-bg-accent); border:1px solid var(--glass-border); padding:56px 40px; border-radius:16px; margin-bottom:70px; text-align:center;">
       <p style="font-family:var(--font-serif); font-size:24px; font-weight:400; color:var(--text-main); line-height:1.5; max-width:680px; margin:0 auto;">
-        "Property management made direct, quiet, and transparent for both owners and tenants."
+        ${t("quote_text")}
       </p>
     </section>
   `;

@@ -9,6 +9,7 @@ import { renderOwnerView } from "./views/ownerView.js";
 import { renderTenantView } from "./views/tenantView.js";
 import { toast } from "./components.js";
 import { guide } from "./guide.js";
+import { getLang, setLang, t } from "./i18n.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   const appContainer = document.getElementById("app-container");
@@ -32,8 +33,8 @@ document.addEventListener("DOMContentLoaded", () => {
     appContainer.style.transition = "opacity 0.2s ease, transform 0.2s ease";
 
     setTimeout(() => {
-      // Render Navbar (which contains the Notification Bell)
-      renderNavbar(navbarMount, user, navigateTo, currentTheme, toggleTheme);
+      // Render Navbar (which contains the Notification Bell & Language Selector)
+      renderNavbar(navbarMount, user, navigateTo, currentTheme, toggleTheme, router);
 
       if (hash === "#/" || hash === "#/home" || hash === "") {
         renderLandingView(appContainer, navigateTo);
@@ -93,12 +94,20 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 /**
- * Dynamically renders the global navigation bar (including Notifications Bell)
+ * Dynamically renders the global navigation bar (including Notifications Bell & Lang Switcher)
  */
-function renderNavbar(mountElement, user, navigateTo, theme, onThemeToggle) {
+function renderNavbar(mountElement, user, navigateTo, theme, onThemeToggle, onLanguageChange) {
   if (!mountElement) return;
 
   const hash = window.location.hash || "#/";
+  const lang = getLang();
+
+  const langHTML = `
+    <div class="lang-switch" style="display:inline-flex; align-items:center; background:var(--glass-bg-accent); border:1px solid var(--glass-border); border-radius:20px; padding:2px; font-size:11px; font-weight:600; font-family:var(--font-sans);">
+      <button class="lang-btn ${lang === 'en' ? 'active' : ''}" data-lang="en" style="padding:3px 8px; border-radius:14px; border:none; background:${lang === 'en' ? 'var(--glass-bg)' : 'transparent'}; color:var(--text-main); cursor:pointer; box-shadow:${lang === 'en' ? '0 1px 4px rgba(0,0,0,0.06)' : 'none'};">🇬🇧 EN</button>
+      <button class="lang-btn ${lang === 'pt' ? 'active' : ''}" data-lang="pt" style="padding:3px 8px; border-radius:14px; border:none; background:${lang === 'pt' ? 'var(--glass-bg)' : 'transparent'}; color:var(--text-main); cursor:pointer; box-shadow:${lang === 'pt' ? '0 1px 4px rgba(0,0,0,0.06)' : 'none'};">🇵🇹 PT</button>
+    </div>
+  `;
 
   // RENDER LOGGED OUT NAVBAR
   if (!user) {
@@ -108,17 +117,18 @@ function renderNavbar(mountElement, user, navigateTo, theme, onThemeToggle) {
       </a>
 
       <div class="nav-links">
-        <a href="#/" class="nav-link ${hash === '#/' ? 'active' : ''}" data-route="home">Home</a>
-        <a href="#/about" class="nav-link ${hash === '#/about' ? 'active' : ''}" data-route="about">About</a>
-        <a href="#/contact" class="nav-link ${hash === '#/contact' ? 'active' : ''}" data-route="contact">Contact</a>
+        <a href="#/" class="nav-link ${hash === '#/' ? 'active' : ''}" data-route="home">${t("nav_home")}</a>
+        <a href="#/about" class="nav-link ${hash === '#/about' ? 'active' : ''}" data-route="about">${t("nav_about")}</a>
+        <a href="#/contact" class="nav-link ${hash === '#/contact' ? 'active' : ''}" data-route="contact">${t("nav_contact")}</a>
       </div>
 
       <div class="nav-actions">
+        ${langHTML}
         <button class="theme-toggle-btn btn-circle" id="nav-theme-btn" style="border:none; background:transparent; font-size:16px; cursor:pointer;">
           ${theme === "dark" ? "☀️" : "🌙"}
         </button>
-        <a href="#/login" class="btn btn-secondary" style="padding: 7px 18px; font-size:13px; border-radius:30px; font-weight:500;">Sign In</a>
-        <a href="#/signup" class="btn btn-primary" style="padding: 7px 18px; font-size:13px; border-radius:30px; font-weight:600;">Get Started</a>
+        <a href="#/login" class="btn btn-secondary" style="padding: 7px 18px; font-size:13px; border-radius:30px; font-weight:500;">${t("nav_signin")}</a>
+        <a href="#/signup" class="btn btn-primary" style="padding: 7px 18px; font-size:13px; border-radius:30px; font-weight:600;">${t("nav_signup")}</a>
       </div>
     `;
     
@@ -137,17 +147,18 @@ function renderNavbar(mountElement, user, navigateTo, theme, onThemeToggle) {
 
       <!-- Center Nav Links & Role Swapper -->
       <div style="display:flex; align-items:center; gap:24px;">
-        <a href="#/" class="nav-link ${hash === '#/' ? 'active' : ''}" style="font-size:13px;">Home</a>
-        <a href="#/dashboard" class="nav-link ${hash.startsWith('#/dashboard') ? 'active' : ''}" style="font-size:13px;">Dashboard</a>
+        <a href="#/" class="nav-link ${hash === '#/' ? 'active' : ''}" style="font-size:13px;">${t("nav_home")}</a>
+        <a href="#/dashboard" class="nav-link ${hash.startsWith('#/dashboard') ? 'active' : ''}" style="font-size:13px;">${t("nav_dashboard")}</a>
         
         <div class="role-switch-container" style="margin-left:8px;">
-          <div class="role-tab ${user.role === 'owner' ? 'active' : ''}" id="nav-tab-owner" style="font-size:12px; font-weight:600;">Landlord</div>
-          <div class="role-tab ${user.role === 'tenant' ? 'active' : ''}" id="nav-tab-tenant" style="font-size:12px; font-weight:600;">Tenant</div>
+          <div class="role-tab ${user.role === 'owner' ? 'active' : ''}" id="nav-tab-owner" style="font-size:12px; font-weight:600;">${t("nav_landlord")}</div>
+          <div class="role-tab ${user.role === 'tenant' ? 'active' : ''}" id="nav-tab-tenant" style="font-size:12px; font-weight:600;">${t("nav_tenant")}</div>
           <div class="role-slider"></div>
         </div>
       </div>
 
       <div class="nav-actions">
+        ${langHTML}
         <!-- Interactive Notification Bell popover -->
         <div style="position:relative;" id="nav-notifications-container">
           <button class="theme-toggle-btn btn-circle" id="nav-notifications-btn" title="Activity Logs" style="border:none; background:transparent; font-size:15px; cursor:pointer;">
@@ -155,10 +166,10 @@ function renderNavbar(mountElement, user, navigateTo, theme, onThemeToggle) {
             ${unreadCount > 0 ? `<span class="pulse-notification-dot" style="position:absolute; top:-1px; right:-1px; background:#c86d51; width:7px; height:7px; border-radius:50%; border:1.5px solid var(--glass-bg);"></span>` : ''}
           </button>
           
-          <!-- Popover card (Absolute positioning) -->
+          <!-- Popover card -->
           <div id="nav-notifications-popover" class="glass-panel" style="display:none; position:absolute; right:0; top:44px; width:320px; max-height:400px; overflow-y:auto; z-index:300; padding:16px; font-family:var(--font-sans);">
             <div style="display:flex; justify-content:space-between; align-items:center; padding-bottom:10px; border-bottom:1px solid var(--glass-border); margin-bottom:12px;">
-              <span style="font-size:11px; font-weight:700; color:var(--text-main); text-transform:uppercase; letter-spacing:0.08em;">Activity Logs</span>
+              <span style="font-size:11px; font-weight:700; color:var(--text-main); text-transform:uppercase; letter-spacing:0.08em;">${t("nav_activity_logs")}</span>
               ${unreadCount > 0 ? `<span style="font-size:10px; background:rgba(200,109,81,0.12); color:var(--primary-color); font-weight:600; padding:2px 8px; border-radius:12px;">${unreadCount} New</span>` : ''}
             </div>
             <div style="display:flex; flex-direction:column; gap:8px;" id="nav-notifications-list-mount">
@@ -178,10 +189,21 @@ function renderNavbar(mountElement, user, navigateTo, theme, onThemeToggle) {
         </div>
 
         <button class="btn btn-secondary" id="nav-logout-btn" style="padding:6px 14px; font-size:12px; border-radius:20px; font-weight:500;">
-          Log Out
+          ${t("nav_logout")}
         </button>
       </div>
     `;
+
+    // Bind language switcher buttons
+    mountElement.querySelectorAll(".lang-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const selectedLang = btn.getAttribute("data-lang");
+        if (selectedLang === getLang()) return;
+        setLang(selectedLang);
+        toast.show(selectedLang === "pt" ? "Idioma alterado para Português (PT)" : "Language set to English", "info");
+        if (onLanguageChange) onLanguageChange();
+      });
+    });
 
     // Bind Swapper
     const oTab = document.getElementById("nav-tab-owner");
