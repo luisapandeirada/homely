@@ -1,5 +1,5 @@
 import { store } from "../store.js";
-import { toast } from "../components.js";
+import { toast, createDialog } from "../components.js";
 import { t } from "../i18n.js";
 import { emailService } from "../emailService.js";
 
@@ -344,8 +344,11 @@ export function renderLoginView(container, navigateTo) {
           <label class="editorial-label" for="login-email">Registered Email</label>
           <input type="email" id="login-email" name="email" class="editorial-input" required placeholder="e.g. user@domain.com">
         </div>
-        <div style="margin-bottom:36px;">
-          <label class="editorial-label" for="login-pw">Secure Password</label>
+        <div style="margin-bottom:20px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <label class="editorial-label" for="login-pw" style="margin-bottom:0;">Secure Password</label>
+            <a href="#" id="forgot-password-link" style="font-size:12px; color:var(--text-muted); text-decoration:underline;">Esqueceu-se da palavra-passe?</a>
+          </div>
           <input type="password" id="login-pw" name="password" class="editorial-input" required placeholder="••••••••">
         </div>
         <button type="submit" class="btn btn-primary" style="width:100%; padding:14px;">
@@ -359,6 +362,32 @@ export function renderLoginView(container, navigateTo) {
       </div>
     </div>
   `;
+
+  // Bind Forgot Password
+  document.getElementById("forgot-password-link")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    createDialog({
+      title: "Recuperação de Palavra-passe",
+      contentHTML: `
+        <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">
+          Insira o e-mail associado à sua conta Homely para receber as instruções de recuperação.
+        </p>
+        <div class="form-group">
+          <label for="reset-email">E-mail Registado</label>
+          <input type="email" id="reset-email" name="email" class="glass-input" required placeholder="e.g. utilizador@domain.pt">
+        </div>
+      `,
+      submitLabel: "Enviar E-mail de Recuperação",
+      onSubmit: (data) => {
+        try {
+          const resetCode = store.requestPasswordReset(data.email);
+          toast.show(`Link de recuperação enviado com sucesso para ${data.email}!`, "success");
+        } catch (err) {
+          toast.show(err.message, "error");
+        }
+      }
+    });
+  });
 
   // Bind Switch
   document.getElementById("auth-switch-signup").addEventListener("click", (e) => {

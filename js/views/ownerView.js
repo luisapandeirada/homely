@@ -2,6 +2,7 @@ import { store } from "../store.js";
 import { renderFinancialChart, renderOccupancyGauge, createDialog, toast, downloadCSV, renderFloorPlan } from "../components.js";
 import { t } from "../i18n.js";
 import { emailService } from "../emailService.js";
+import { pdfService } from "../pdfService.js";
 
 export function renderOwnerView(container) {
   const properties = store.getProperties();
@@ -273,8 +274,16 @@ function renderPropertiesTab(targetElement, properties, users) {
                 <span class="property-type-tag">${p.type}</span>
               </div>
               <div class="property-info">
-                <h3>${p.name}</h3>
-                <p>📍 ${p.address}</p>
+                <div style="display:flex; justify-content:space-between; align-items:start;">
+                  <div>
+                    <h3>${p.name}</h3>
+                    <p>📍 ${p.address}</p>
+                  </div>
+                  <div style="display:flex; gap:6px;">
+                    <button class="btn btn-secondary edit-prop-btn" data-id="${p.id}" style="font-size:11px; padding:4px 8px;" title="Editar Imóvel">✏️</button>
+                    <button class="btn btn-secondary delete-prop-btn" data-id="${p.id}" style="font-size:11px; padding:4px 8px; color:#ef4444;" title="Eliminar Imóvel">🗑️</button>
+                  </div>
+                </div>
                 
                 <div style="margin: 15px 0;">
                   <div style="font-weight: 700; font-size: 11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom: 8px;">${t("units_distribution")}</div>
@@ -310,6 +319,59 @@ function renderPropertiesTab(targetElement, properties, users) {
 
   document.getElementById("add-property-btn")?.addEventListener("click", () => {
     triggerAddPropertyModal(targetElement);
+  });
+
+  // Bind Edit Property buttons
+  targetElement.querySelectorAll(".edit-prop-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const propId = btn.getAttribute("data-id");
+      const prop = properties.find(p => p.id === propId);
+      if (!prop) return;
+
+      createDialog({
+        title: "Editar Imóvel",
+        contentHTML: `
+          <div class="form-group">
+            <label for="edit-prop-name">Nome do Imóvel</label>
+            <input type="text" id="edit-prop-name" name="name" class="glass-input" required value="${prop.name}">
+          </div>
+          <div class="form-group">
+            <label for="edit-prop-address">Morada Completa</label>
+            <input type="text" id="edit-prop-address" name="address" class="glass-input" required value="${prop.address}">
+          </div>
+          <div class="form-group">
+            <label for="edit-prop-type">Tipo de Imóvel</label>
+            <select id="edit-prop-type" name="type" class="glass-input">
+              <option value="Apartment" ${prop.type === 'Apartment' ? 'selected' : ''}>Apartamento</option>
+              <option value="Loft" ${prop.type === 'Loft' ? 'selected' : ''}>Loft / Estúdio</option>
+              <option value="Single Family" ${prop.type === 'Single Family' ? 'selected' : ''}>Moradia</option>
+              <option value="Condo" ${prop.type === 'Condo' ? 'selected' : ''}>Fração Autónoma</option>
+            </select>
+          </div>
+        `,
+        submitLabel: "Guardar Alterações",
+        onSubmit: (data) => {
+          store.updateProperty(propId, data);
+          toast.show("Dados do imóvel atualizados.", "success");
+          renderOwnerView(targetElement.closest(".dashboard-wrapper")?.parentElement || targetElement);
+        }
+      });
+    });
+  });
+
+  // Bind Delete Property buttons
+  targetElement.querySelectorAll(".delete-prop-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const propId = btn.getAttribute("data-id");
+      const prop = properties.find(p => p.id === propId);
+      if (!prop) return;
+
+      if (confirm(`Tem a certeza que pretende eliminar o imóvel '${prop.name}' do seu portfólio?`)) {
+        store.deleteProperty(propId);
+        toast.show("Imóvel removido do portfólio.", "success");
+        renderOwnerView(targetElement.closest(".dashboard-wrapper")?.parentElement || targetElement);
+      }
+    });
   });
 }
 
@@ -566,6 +628,8 @@ function renderLeasesTab(targetElement, properties, users, invitations) {
  * 4. MAINTENANCE TAB
  */
 function renderMaintenanceTab(targetElement, requests, properties, users) {
+  const contractors = store.getContractors();
+
   targetElement.innerHTML = `
     <div class="card-title-row">
       <h2 style="font-family:var(--font-serif); font-size:26px; font-weight:400; margin-bottom:0;">${t("maintenance_title")}</h2>
@@ -578,12 +642,16 @@ function renderMaintenanceTab(targetElement, requests, properties, users) {
         </div>
         <div class="ticket-list">
           ${requests.filter(r => r.status === 'Reported').map(r => `
-            <div class="ticket-card">
+            <div class="ticket-card maintenance-ticket-clickable" data-id="${r.id}" style="cursor:pointer;" title="Clique para gerir reparação">
               <div class="ticket-header">
                 <h4>${r.title}</h4>
                 <span class="ticket-badge priority-${r.priority.toLowerCase()}">${r.priority}</span>
               </div>
               <p>${r.description}</p>
+              <div style="font-size:11px; color:var(--text-muted); margin-top:8px; display:flex; justify-content:space-between;">
+                <span>👤 ${users[r.tenantId]?.name || 'Residente'}</span>
+                <span>⚙️ Clique p/ gerir</span>
+              </div>
             </div>
           `).join("")}
         </div>
@@ -596,12 +664,16 @@ function renderMaintenanceTab(targetElement, requests, properties, users) {
         </div>
         <div class="ticket-list">
           ${requests.filter(r => r.status === 'In Progress').map(r => `
-            <div class="ticket-card">
+            <div class="ticket-card maintenance-ticket-clickable" data-id="${r.id}" style="cursor:pointer;" title="Clique para gerir reparação">
               <div class="ticket-header">
                 <h4>${r.title}</h4>
                 <span class="ticket-badge priority-high">${t("in_progress")}</span>
               </div>
               <p>${r.description}</p>
+              <div style="font-size:11px; color:var(--text-muted); margin-top:8px; display:flex; justify-content:space-between;">
+                <span>👤 ${users[r.tenantId]?.name || 'Residente'}</span>
+                <span>⚙️ Gerir</span>
+              </div>
             </div>
           `).join("")}
         </div>
@@ -614,18 +686,70 @@ function renderMaintenanceTab(targetElement, requests, properties, users) {
         </div>
         <div class="ticket-list">
           ${requests.filter(r => r.status === 'Completed' || r.status === 'Resolved').map(r => `
-            <div class="ticket-card">
+            <div class="ticket-card maintenance-ticket-clickable" data-id="${r.id}" style="cursor:pointer;" title="Clique para gerir reparação">
               <div class="ticket-header">
                 <h4>${r.title}</h4>
                 <span class="ticket-badge priority-low">✓ ${t("completed")}</span>
               </div>
               <p>${r.description}</p>
+              <div style="font-size:11px; color:var(--text-muted); margin-top:8px; display:flex; justify-content:space-between;">
+                <span>Custo: €${r.cost || 0}</span>
+                <span>✓ Concluído</span>
+              </div>
             </div>
           `).join("")}
         </div>
       </div>
     </div>
   `;
+
+  // Bind click handlers for managing repair tickets
+  targetElement.querySelectorAll(".maintenance-ticket-clickable").forEach(card => {
+    card.addEventListener("click", () => {
+      const reqId = card.getAttribute("data-id");
+      const req = requests.find(r => r.id === reqId);
+      if (!req) return;
+
+      createDialog({
+        title: `Gerir Reparação: ${req.title}`,
+        contentHTML: `
+          <div style="margin-bottom:16px; font-size:13px; color:var(--text-muted);">
+            <p style="margin-bottom:4px;"><strong>Descrição:</strong> ${req.description}</p>
+            <p style="margin-bottom:4px;"><strong>Categoria:</strong> ${req.category} | <strong>Urgência:</strong> ${req.priority}</p>
+            <p><strong>Residente:</strong> ${users[req.tenantId]?.name || 'Residente'}</p>
+          </div>
+
+          <div class="form-group">
+            <label for="maint-status">Estado da Reparação</label>
+            <select id="maint-status" name="status" class="glass-input">
+              <option value="Reported" ${req.status === 'Reported' ? 'selected' : ''}>Registado</option>
+              <option value="In Progress" ${req.status === 'In Progress' ? 'selected' : ''}>Em Resolução / Atribuído</option>
+              <option value="Completed" ${req.status === 'Completed' || req.status === 'Resolved' ? 'selected' : ''}>Concluído & Resolvido</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="maint-contractor">Atribuir Prestador de Serviços / Empreiteiro</label>
+            <select id="maint-contractor" name="contractorId" class="glass-input">
+              <option value="">-- Selecionar Prestador --</option>
+              ${contractors.map(c => `<option value="${c.id}" ${req.contractorId === c.id ? 'selected' : ''}>${c.name} (${c.trade} - ${c.rating})</option>`).join("")}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="maint-cost">Custo Faturado (€) (Dedução Fiscal IRS)</label>
+            <input type="number" id="maint-cost" name="cost" class="glass-input" value="${req.cost || 0}" min="0" step="10" placeholder="e.g. 150">
+          </div>
+        `,
+        submitLabel: "Guardar Estado da Reparação",
+        onSubmit: (data) => {
+          store.updateMaintenanceStatus(req.id, data.status, data.cost, "Reparações");
+          toast.show("Estado da reparação e custos atualizados!", "success");
+          renderOwnerView(targetElement.closest(".dashboard-wrapper")?.parentElement || targetElement);
+        }
+      });
+    });
+  });
 }
 
 /**
@@ -662,19 +786,40 @@ function renderFinancialsTab(targetElement, payments, users, properties) {
           </tr>
         </thead>
         <tbody>
-          ${payments.map(p => `
-            <tr>
-              <td style="font-weight:600;">${p.description || 'Renda Mensal'}</td>
-              <td style="font-weight:700;">€${p.amount.toLocaleString()}</td>
-              <td>${p.dueDate}</td>
-              <td><span class="payment-status-badge ${p.status.toLowerCase()}">${p.status === 'Paid' ? 'Pago' : 'Pendente'}</span></td>
-              <td><a href="#" style="color:var(--text-main); font-weight:600; font-size:12px;">Recibo PDF</a></td>
-            </tr>
-          `).join("")}
+          ${payments.map(p => {
+            const tenantUser = users[p.tenantId];
+            const prop = properties.find(pr => pr.id === p.propertyId);
+            const unit = prop ? prop.units.find(u => u.id === p.unitId) : null;
+            return `
+              <tr>
+                <td style="font-weight:600;">${p.description || 'Renda Mensal'}</td>
+                <td style="font-weight:700;">€${p.amount.toLocaleString()}</td>
+                <td>${p.dueDate}</td>
+                <td><span class="payment-status-badge ${p.status.toLowerCase()}">${p.status === 'Paid' ? 'Pago' : 'Pendente'}</span></td>
+                <td>
+                  <button class="btn btn-secondary download-receipt-pdf-btn" data-id="${p.id}" style="font-size:11px; padding:4px 10px;">
+                    📄 Recibo PDF
+                  </button>
+                </td>
+              </tr>
+            `;
+          }).join("")}
         </tbody>
       </table>
     </div>
   `;
+
+  targetElement.querySelectorAll(".download-receipt-pdf-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const pId = btn.getAttribute("data-id");
+      const p = payments.find(pay => pay.id === pId);
+      if (!p) return;
+      const tenantUser = users[p.tenantId];
+      const prop = properties.find(pr => pr.id === p.propertyId);
+      const unit = prop ? prop.units.find(u => u.id === p.unitId) : null;
+      pdfService.downloadReceiptPDF(p, tenantUser, prop, unit);
+    });
+  });
 
   document.getElementById("export-csv-btn")?.addEventListener("click", () => {
     downloadCSV("relatorio_financeiro_homely.csv", payments);

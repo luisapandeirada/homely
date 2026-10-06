@@ -7,6 +7,7 @@ import { store } from "../store.js";
 import { createDialog, toast, initSignaturePad } from "../components.js";
 import { t } from "../i18n.js";
 import { paymentService } from "../paymentService.js";
+import { pdfService } from "../pdfService.js";
 
 export function renderTenantView(container) {
   const tenant = store.getCurrentUser();
@@ -327,7 +328,12 @@ function renderDashboardTab(targetElement, prop, unit, activeInvoice, tenantRequ
 
         <!-- Lease Overview -->
         <div class="glass-panel" style="padding:24px;">
-          <h3 style="margin-bottom:16px; font-size:18px; font-family:var(--font-serif);">${t("leases_title")}</h3>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <h3 style="margin-bottom:0; font-size:18px; font-family:var(--font-serif);">${t("leases_title")}</h3>
+            <button class="btn btn-secondary" id="tenant-download-lease-btn" style="font-size:11px; padding:6px 12px;">
+              📜 Contrato PDF
+            </button>
+          </div>
           <div style="display:flex; flex-direction:column; gap:12px; font-size:13px;">
             <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--glass-border); padding-bottom:10px;">
               <span style="color:var(--text-muted);">${t("monthly_rent")}</span>
@@ -343,7 +349,7 @@ function renderDashboardTab(targetElement, prop, unit, activeInvoice, tenantRequ
             </div>
             <div style="display:flex; justify-content:space-between;">
               <span style="color:var(--text-muted);">${t("nif_number")}</span>
-              <strong>${tenant.nif || '248192039'}</strong>
+              <strong>${tenant.nif || 'Verificado'}</strong>
             </div>
           </div>
         </div>
@@ -360,7 +366,7 @@ function renderDashboardTab(targetElement, prop, unit, activeInvoice, tenantRequ
           <div style="display:flex; flex-direction:column; gap:12px;">
             <div style="display:flex; justify-content:space-between; align-items:center; background:var(--glass-bg-accent); padding:12px 16px; border-radius:8px; border:1px solid var(--glass-border);">
               <span style="font-size:12px; font-weight:600;">Estado NIF</span>
-              <span style="font-size:11px; color:#10b981; font-weight:700;">✓ Verificado (${tenant.nif || '248192039'})</span>
+              <span style="font-size:11px; color:#10b981; font-weight:700;">✓ Verificado (${tenant.nif || 'Verificado'})</span>
             </div>
             <div style="display:flex; justify-content:space-between; align-items:center; background:var(--glass-bg-accent); padding:12px 16px; border-radius:8px; border:1px solid var(--glass-border);">
               <span style="font-size:12px; font-weight:600;">Histórico de Rendas</span>
@@ -381,9 +387,16 @@ function renderDashboardTab(targetElement, prop, unit, activeInvoice, tenantRequ
                   <div style="font-weight:600;">${p.description || 'Renda Mensal'}</div>
                   <div style="font-size:11px; color:var(--text-muted);">${p.dueDate}</div>
                 </div>
-                <div style="text-align:right;">
+                <div style="text-align:right; display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
                   <div style="font-weight:700;">€${p.amount.toLocaleString()}</div>
-                  <span class="payment-status-badge ${p.status.toLowerCase()}">${p.status === 'Paid' ? 'Pago' : 'Pendente'}</span>
+                  <div style="display:flex; gap:6px; align-items:center;">
+                    <span class="payment-status-badge ${p.status.toLowerCase()}">${p.status === 'Paid' ? 'Pago' : 'Pendente'}</span>
+                    ${p.status === 'Paid' ? `
+                      <button class="btn btn-secondary tenant-pdf-receipt-btn" data-id="${p.id}" style="font-size:10px; padding:2px 6px;">
+                        📄 Recibo PDF
+                      </button>
+                    ` : ''}
+                  </div>
                 </div>
               </div>
             `).join("")}
@@ -394,6 +407,30 @@ function renderDashboardTab(targetElement, prop, unit, activeInvoice, tenantRequ
 
     </div>
   `;
+
+  // Bind Lease PDF Download button
+  targetElement.querySelector("#tenant-download-lease-btn")?.addEventListener("click", () => {
+    const leases = store.getLeases();
+    const lease = leases.find(l => l.tenantId === tenant.id) || {
+      rent: unit ? unit.rent : 1200,
+      deposit: unit ? unit.rent * 2 : 2400,
+      startDate: new Date().toISOString().split("T")[0],
+      endDate: new Date(Date.now() + 365*24*60*60*1000).toISOString().split("T")[0],
+      signedName: tenant.name
+    };
+    pdfService.downloadLeasePDF(lease, tenant, prop, unit);
+  });
+
+  // Bind Receipt PDF Download buttons
+  targetElement.querySelectorAll(".tenant-pdf-receipt-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const pId = btn.getAttribute("data-id");
+      const p = tenantPayments.find(pay => pay.id === pId);
+      if (p) {
+        pdfService.downloadReceiptPDF(p, tenant, prop, unit);
+      }
+    });
+  });
 
   // Bind Pay Rent button with Portugal/EU payment modalities & gateways
   targetElement.querySelector(".pay-rent-btn")?.addEventListener("click", () => {

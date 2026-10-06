@@ -202,6 +202,58 @@ class Store {
     return newProp;
   }
 
+  updateProperty(propId, { name, address, type }) {
+    const prop = this.state.properties.find(p => p.id === propId);
+    if (prop) {
+      if (name) prop.name = name.trim();
+      if (address) prop.address = address.trim();
+      if (type) prop.type = type;
+      this.addNotification(`Property '${prop.name}' details updated.`, "property");
+      this.saveState();
+      return prop;
+    }
+    return null;
+  }
+
+  deleteProperty(propId) {
+    const idx = this.state.properties.findIndex(p => p.id === propId);
+    if (idx !== -1) {
+      const removed = this.state.properties.splice(idx, 1)[0];
+      this.addNotification(`Property '${removed.name}' removed from portfolio.`, "property");
+      this.saveState();
+      return true;
+    }
+    return false;
+  }
+
+  updateUnitRent(propId, unitId, newRent) {
+    const prop = this.state.properties.find(p => p.id === propId);
+    if (prop) {
+      const unit = prop.units.find(u => u.id === unitId);
+      if (unit) {
+        unit.rent = Number(newRent) || unit.rent;
+        this.addNotification(`Rent for ${unit.number} in '${prop.name}' updated to €${unit.rent}/month.`, "property");
+        this.saveState();
+        return unit;
+      }
+    }
+    return null;
+  }
+
+  requestPasswordReset(email) {
+    const cleanEmail = email.trim().toLowerCase();
+    const userKey = Object.keys(this.state.users).find(
+      k => this.state.users[k].email.toLowerCase() === cleanEmail
+    );
+    if (!userKey) {
+      throw new Error("E-mail address not found in system.");
+    }
+    const resetCode = `RESET-${Math.floor(100000 + Math.random() * 900000)}`;
+    this.addNotification(`Password reset link generated for ${cleanEmail}.`, "invite");
+    this.saveState();
+    return resetCode;
+  }
+
   addMaintenanceRequest(request) {
     const newReq = {
       id: `req_${Date.now()}`,
