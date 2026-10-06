@@ -6,6 +6,7 @@
 import { store } from "../store.js";
 import { createDialog, toast, initSignaturePad } from "../components.js";
 import { t } from "../i18n.js";
+import { paymentService } from "../paymentService.js";
 
 export function renderTenantView(container) {
   const tenant = store.getCurrentUser();
@@ -394,37 +395,45 @@ function renderDashboardTab(targetElement, prop, unit, activeInvoice, tenantRequ
     </div>
   `;
 
-  // Bind Pay Rent button with Portugal/EU payment modalities
+  // Bind Pay Rent button with Portugal/EU payment modalities & gateways
   targetElement.querySelector(".pay-rent-btn")?.addEventListener("click", () => {
     if (!activeInvoice) return;
 
     createDialog({
-      title: "Pagamento de Renda (Portugal & UE)",
+      title: "Pagamento de Renda (Portugal & UE Gateway)",
       contentHTML: `
         <div style="margin-bottom:20px; background:var(--glass-bg-accent); padding:16px; border-radius:8px; border:1px solid var(--glass-border);">
-          <div style="font-size:11px; text-transform:uppercase; font-weight:700; color:var(--text-muted);">Valor da Renda</div>
+          <div style="font-size:11px; text-transform:uppercase; font-weight:700; color:var(--text-muted);">Valor da Renda Mensal</div>
           <div style="font-size:28px; font-weight:700; font-family:var(--font-sans); color:var(--text-main);">€${activeInvoice.amount.toLocaleString()}</div>
         </div>
 
         <div class="form-group">
           <label>${t("payment_method")}</label>
           <select id="pt-payment-method" class="glass-input">
+            <option value="Apple Pay">🍎 Apple Pay</option>
+            <option value="Google Pay">🌐 Google Pay</option>
+            <option value="Revolut Pay">⚡ Revolut Pay</option>
+            <option value="PayPal">🅿️ PayPal</option>
             <option value="MB WAY">📱 MB WAY</option>
             <option value="Multibanco / SEPA (IBAN)">🏛️ Multibanco / Transferência SEPA (IBAN)</option>
             <option value="Cartão de Débito / Crédito">💳 Cartão de Débito / Crédito</option>
           </select>
         </div>
 
-        <div id="mbway-panel" class="form-group" style="margin-top:16px;">
-          <label>Número de Telemóvel MB WAY</label>
-          <input type="text" id="mbway-phone" class="glass-input" value="${tenant.phone || '+351 964 382 102'}">
+        <div id="payment-gateway-info" style="margin-top:16px; font-size:12px; color:var(--text-muted); background:#fff; padding:12px; border-radius:6px; border:1px solid var(--glass-border);">
+          🔒 Processamento encriptado e seguro via Stripe / Gateway oficial com emissão de recibo digital.
         </div>
       `,
-      submitLabel: "Confirmar Pagamento (€" + activeInvoice.amount.toLocaleString() + ")",
-      onSubmit: (data) => {
+      submitLabel: "Pagar Renda agora (€" + activeInvoice.amount.toLocaleString() + ")",
+      onSubmit: async (data) => {
         const method = document.getElementById("pt-payment-method").value;
-        store.payRent(activeInvoice.id, method);
-        toast.show(`Pagamento de €${activeInvoice.amount} efetuado com sucesso via ${method}!`, "success");
+        const res = await paymentService.processTenantRentPayment({
+          paymentId: activeInvoice.id,
+          tenantUser: tenant,
+          amount: activeInvoice.amount,
+          paymentMethod: method
+        });
+        toast.show(`Pagamento de €${activeInvoice.amount} efetuado com sucesso via ${method}! Recibo enviado para o e-mail.`, "success");
         renderTenantView(targetElement.parentElement);
       }
     });

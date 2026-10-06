@@ -1,6 +1,7 @@
 import { store } from "../store.js";
 import { renderFinancialChart, renderOccupancyGauge, createDialog, toast, downloadCSV, renderFloorPlan } from "../components.js";
 import { t } from "../i18n.js";
+import { emailService } from "../emailService.js";
 
 export function renderOwnerView(container) {
   const properties = store.getProperties();
@@ -494,6 +495,19 @@ function renderLeasesTab(targetElement, properties, users, invitations) {
         const [propId, unitId] = data.unitKey.split("|");
         const newInvite = store.createInvitation({ ...data, propertyId: propId, unitId: unitId });
         const inviteUrl = `${window.location.origin}${window.location.pathname}#/signup?code=${newInvite.code}`;
+        const targetProp = properties.find(p => p.id === propId);
+        const targetUnit = targetProp ? targetProp.units.find(u => u.id === unitId) : null;
+
+        // Dispatch email via emailService
+        emailService.sendTenantInvitation({
+          name: newInvite.name,
+          email: newInvite.email,
+          inviteCode: newInvite.code,
+          propertyName: targetProp ? targetProp.name : "Imóvel",
+          unitNumber: targetUnit ? targetUnit.number : "Fração",
+          rentAmount: newInvite.rentAmount,
+          inviteUrl: inviteUrl
+        });
 
         // Render interactive sent invitation email modal
         const inviteModalOverlay = document.createElement("div");

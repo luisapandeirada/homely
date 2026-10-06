@@ -1,6 +1,7 @@
 import { store } from "../store.js";
 import { toast } from "../components.js";
 import { t } from "../i18n.js";
+import { emailService } from "../emailService.js";
 
 // Helper to update active links in navigation bar
 function setActiveNavLink(routeId) {
@@ -498,6 +499,14 @@ export function renderSignupView(container, navigateTo) {
     try {
       const user = store.signup(name, email, password, role, inviteCode);
       const confCode = `CONF-${Math.floor(100000 + Math.random() * 900000)}`;
+
+      // Dispatch real email via EmailService
+      emailService.sendAccountConfirmation({
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        confirmationCode: confCode
+      });
 
       // Render interactive email confirmation modal
       const modalOverlay = document.createElement("div");
