@@ -102,6 +102,33 @@ function renderSummaryTab(targetElement, properties, requests, payments, users) 
   const grossRent = payments.reduce((acc, p) => p.status === "Paid" ? acc + p.amount : acc, 0);
   const activeRequestsCount = requests.filter(r => r.status !== "Completed" && r.status !== "Resolved").length;
 
+  if (properties.length === 0) {
+    targetElement.innerHTML = `
+      <div class="metrics-row">
+        <div class="metric-card"><div class="metric-icon">💶</div><div class="metric-details"><h4>${t("metric_gross_rent")}</h4><div class="value">€0</div></div></div>
+        <div class="metric-card"><div class="metric-icon">📈</div><div class="metric-details"><h4>${t("metric_net_rent")}</h4><div class="value">€0</div></div></div>
+        <div class="metric-card"><div class="metric-icon">🏢</div><div class="metric-details"><h4>${t("metric_occupancy")}</h4><div class="value">0%</div></div></div>
+        <div class="metric-card"><div class="metric-icon">🔧</div><div class="metric-details"><h4>${t("metric_active_maint")}</h4><div class="value">0</div></div></div>
+      </div>
+
+      <div class="glass-card" style="text-align:center; padding:60px 24px; margin-top:24px; border-radius:16px;">
+        <div style="font-size:48px; margin-bottom:16px;">🏢</div>
+        <h3 style="font-family:var(--font-serif); font-size:26px; font-weight:400; margin-bottom:8px;">O seu portfólio está vazio</h3>
+        <p style="font-size:14px; color:var(--text-muted); max-width:520px; margin:0 auto 28px auto; line-height:1.6;">
+          Registe o seu primeiro imóvel e as suas frações para começar a gerir contratos de arrendamento, rendas mensais e pedidos de reparação.
+        </p>
+        <button class="btn btn-primary" id="summary-add-prop-btn" style="padding:14px 32px; font-size:14px;">
+          ${t("btn_add_property")}
+        </button>
+      </div>
+    `;
+
+    document.getElementById("summary-add-prop-btn")?.addEventListener("click", () => {
+      triggerAddPropertyModal(targetElement);
+    });
+    return;
+  }
+
   targetElement.innerHTML = `
     <!-- Metrics Row -->
     <div class="metrics-row">
@@ -170,6 +197,47 @@ function renderSummaryTab(targetElement, properties, requests, payments, users) 
   renderOccupancyGauge(document.getElementById("occupancy-gauge-container"), occupiedUnits, totalUnits);
 }
 
+function triggerAddPropertyModal(targetElement) {
+  createDialog({
+    title: t("btn_add_property"),
+    contentHTML: `
+      <div class="form-group">
+        <label for="prop-name">Nome do Imóvel</label>
+        <input type="text" id="prop-name" name="name" class="glass-input" required placeholder="e.g. Edifício Chiado">
+      </div>
+      <div class="form-group">
+        <label for="prop-address">Morada Completa</label>
+        <input type="text" id="prop-address" name="address" class="glass-input" required placeholder="e.g. Rua Garrett 45, Lisboa">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="prop-type">Tipo de Imóvel</label>
+          <select id="prop-type" name="type" class="glass-input">
+            <option value="Apartment">Apartamento</option>
+            <option value="Loft">Loft / Estúdio</option>
+            <option value="Single Family">Moradia</option>
+            <option value="Condo">Fração Autónoma</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="prop-rent">Renda Prevista (€)</label>
+          <input type="number" id="prop-rent" name="rent" class="glass-input" required min="100" placeholder="e.g. 1500">
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="prop-units-string">Designação das Frações (separadas por vírgula)</label>
+        <textarea id="prop-units-string" name="unitsString" class="glass-input" required placeholder="e.g. 1º Dto, 1º Esq, 2º Dto" rows="2"></textarea>
+      </div>
+    `,
+    submitLabel: t("btn_add_property"),
+    onSubmit: (data) => {
+      store.addProperty(data);
+      toast.show("Imóvel adicionado com sucesso.", "success");
+      renderOwnerView(targetElement.closest(".dashboard-wrapper")?.parentElement || targetElement);
+    }
+  });
+}
+
 /**
  * 2. PROPERTIES TAB
  */
@@ -181,92 +249,66 @@ function renderPropertiesTab(targetElement, properties, users) {
         ${t("btn_add_property")}
       </button>
     </div>
-    <div class="properties-grid">
-      ${properties.map(p => {
-        const totalUnits = p.units.length;
-        const occupied = p.units.filter(u => u.status === "Occupied").length;
-        const vacant = totalUnits - occupied;
 
-        return `
-          <div class="glass-panel property-card">
-            <div class="property-img-wrapper">
-              <img class="property-img" src="${p.image}" alt="${p.name}">
-              <span class="property-type-tag">${p.type}</span>
-            </div>
-            <div class="property-info">
-              <h3>${p.name}</h3>
-              <p>📍 ${p.address}</p>
-              
-              <div style="margin: 15px 0;">
-                <div style="font-weight: 700; font-size: 11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom: 8px;">${t("units_distribution")}</div>
-                <div style="display:flex; flex-direction:column; gap:6px;">
-                  ${p.units.map(u => {
-                    const tenantName = u.tenantId ? (users[u.tenantId]?.name || "Inquilino") : "Livre";
-                    return `
-                      <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; background:var(--glass-bg-accent); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--glass-border);">
-                        <span style="font-weight:600; font-family:var(--font-sans);">${u.number} <span style="color:var(--text-muted); font-weight:400;">(€${u.rent.toLocaleString()}/mês)</span></span>
-                        <div style="display:flex; align-items:center; gap:8px;">
-                          <span class="unit-pill ${u.status.toLowerCase()}">${u.status === 'Occupied' ? t("units_leased") : t("vacant")}</span>
-                          ${u.tenantId ? `<span style="font-size:11px; color:var(--text-muted); font-weight:500;">${tenantName}</span>` : ""}
+    ${properties.length === 0 ? `
+      <div class="glass-panel" style="text-align:center; padding:60px 24px; border-radius:16px; margin-top:20px;">
+        <div style="font-size:48px; margin-bottom:16px;">🏢</div>
+        <h3 style="font-family:var(--font-serif); font-size:24px; font-weight:400; margin-bottom:8px;">Nenhum imóvel registado</h3>
+        <p style="font-size:14px; color:var(--text-muted); max-width:480px; margin:0 auto 24px auto;">
+          Clique abaixo para registar o seu primeiro imóvel e começar a organizar o portfólio.
+        </p>
+      </div>
+    ` : `
+      <div class="properties-grid">
+        ${properties.map(p => {
+          const totalUnits = p.units.length;
+          const occupied = p.units.filter(u => u.status === "Occupied").length;
+          const vacant = totalUnits - occupied;
+
+          return `
+            <div class="glass-panel property-card">
+              <div class="property-img-wrapper">
+                <img class="property-img" src="${p.image}" alt="${p.name}">
+                <span class="property-type-tag">${p.type}</span>
+              </div>
+              <div class="property-info">
+                <h3>${p.name}</h3>
+                <p>📍 ${p.address}</p>
+                
+                <div style="margin: 15px 0;">
+                  <div style="font-weight: 700; font-size: 11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom: 8px;">${t("units_distribution")}</div>
+                  <div style="display:flex; flex-direction:column; gap:6px;">
+                    ${p.units.map(u => {
+                      const tenantName = u.tenantId ? (users[u.tenantId]?.name || "Inquilino") : "Livre";
+                      return `
+                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; background:var(--glass-bg-accent); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--glass-border);">
+                          <span style="font-weight:600; font-family:var(--font-sans);">${u.number} <span style="color:var(--text-muted); font-weight:400;">(€${u.rent.toLocaleString()}/mês)</span></span>
+                          <div style="display:flex; align-items:center; gap:8px;">
+                            <span class="unit-pill ${u.status.toLowerCase()}">${u.status === 'Occupied' ? t("units_leased") : t("vacant")}</span>
+                            ${u.tenantId ? `<span style="font-size:11px; color:var(--text-muted); font-weight:500;">${tenantName}</span>` : ""}
+                          </div>
                         </div>
-                      </div>
-                    `;
-                  }).join("")}
+                      `;
+                    }).join("")}
+                  </div>
+                </div>
+
+                <div class="property-units-summary">
+                  <span>${t("units_leased")}: <strong>${occupied} / ${totalUnits}</strong></span>
+                  <span class="${vacant > 0 ? 'text-warning' : 'text-success'}" style="font-weight:700;">
+                    ${vacant > 0 ? `${vacant} ${t("vacant")}` : t("fully_leased")}
+                  </span>
                 </div>
               </div>
-
-              <div class="property-units-summary">
-                <span>${t("units_leased")}: <strong>${occupied} / ${totalUnits}</strong></span>
-                <span class="${vacant > 0 ? 'text-warning' : 'text-success'}" style="font-weight:700;">
-                  ${vacant > 0 ? `${vacant} ${t("vacant")}` : t("fully_leased")}
-                </span>
-              </div>
             </div>
-          </div>
-        `;
-      }).join("")}
-    </div>
+          `;
+        }).join("")}
+      </div>
+    `}
   `;
 
   document.getElementById("add-property-btn")?.addEventListener("click", () => {
-    createDialog({
-      title: t("btn_add_property"),
-      contentHTML: `
-        <div class="form-group">
-          <label for="prop-name">Nome do Imóvel</label>
-          <input type="text" id="prop-name" name="name" class="glass-input" required placeholder="e.g. Edifício Chiado">
-        </div>
-        <div class="form-group">
-          <label for="prop-address">Morada Completa</label>
-          <input type="text" id="prop-address" name="address" class="glass-input" required placeholder="e.g. Rua Garrett 45, Lisboa">
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="prop-type">Tipo de Imóvel</label>
-            <select id="prop-type" name="type" class="glass-input">
-              <option value="Apartment">Apartamento</option>
-              <option value="Loft">Loft / Estúdio</option>
-              <option value="Single Family">Moradia</option>
-              <option value="Condo">Fração Autónoma</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="prop-rent">Renda Prevista (€)</label>
-            <input type="number" id="prop-rent" name="rent" class="glass-input" required min="100" placeholder="e.g. 1500">
-          </div>
-        </div>
-        <div class="form-group">
-          <label for="prop-units-string">Designação das Frações (separadas por vírgula)</label>
-          <textarea id="prop-units-string" name="unitsString" class="glass-input" required placeholder="e.g. 1º Dto, 1º Esq, 2º Dto" rows="2"></textarea>
-        </div>
-      `,
-      submitLabel: t("btn_add_property"),
-      onSubmit: (data) => {
-        store.addProperty(data);
-        toast.show("Imóvel adicionado com sucesso.", "success");
-        renderOwnerView(targetElement.parentElement);
-      }
-    });
+    triggerAddPropertyModal(targetElement);
   });
 }
 
@@ -291,55 +333,132 @@ function renderLeasesTab(targetElement, properties, users, invitations) {
         <button class="btn btn-primary" id="invite-renter-btn">
           ✉️ ${t("btn_invite_tenant")}
         </button>
-      ` : ""}
+      ` : (properties.length === 0 ? `
+        <button class="btn btn-primary" id="invite-renter-btn-disabled" disabled style="opacity:0.5; cursor:not-allowed;">
+          ✉️ ${t("btn_invite_tenant")}
+        </button>
+      ` : "")}
     </div>
 
-    <div class="glass-table-wrapper" style="margin-bottom:40px;">
-      <table class="glass-table">
-        <thead>
-          <tr>
-            <th>${t("properties_title")} / Fração</th>
-            <th>Inquilino</th>
-            <th>${t("monthly_rent")} & ${t("deposit")}</th>
-            <th>${t("lease_period")}</th>
-            <th>${t("nif_number")} & ${t("verification_status")}</th>
-            <th>Estado</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${leases.length === 0 ? `
-            <tr><td colspan="6" style="text-align:center; padding:30px; color:var(--text-muted);">Sem contratos registados.</td></tr>
-          ` : leases.map(lease => {
-            const prop = properties.find(p => p.id === lease.propertyId);
-            const unit = prop ? prop.units.find(u => u.id === lease.unitId) : null;
-            const tenant = users[lease.tenantId];
-            return `
-              <tr>
-                <td>
-                  <div style="font-weight: 700;">${prop ? prop.name : 'Imóvel'}</div>
-                  <div style="font-size:11px; color: var(--text-muted);">${unit ? unit.number : 'Fração'}</div>
-                </td>
-                <td>
-                  <div style="font-weight:600;">${tenant ? tenant.name : 'Inquilino'}</div>
-                  <div style="font-size:11px; color:var(--text-muted);">${tenant ? tenant.email : ''}</div>
-                </td>
-                <td>
-                  <div style="font-weight:700;">€${lease.rent.toLocaleString()}/mês</div>
-                  <div style="font-size:11px; color:var(--text-muted);">${t("deposit")}: €${lease.deposit.toLocaleString()}</div>
-                </td>
-                <td style="font-size:12px;">${lease.startDate} a ${lease.endDate}</td>
-                <td>
-                  <div style="font-size:11px; font-weight:600;">NIF: ${tenant && tenant.nif ? tenant.nif : '248192039'}</div>
-                  <span style="font-size:10px; color:#10b981; font-weight:700;">✓ IRS Verificado</span>
-                </td>
-                <td><span class="unit-pill ${lease.status === 'Active' ? 'occupied' : 'vacant'}">${lease.status}</span></td>
-              </tr>
-            `;
-          }).join("")}
-        </tbody>
-      </table>
+    ${properties.length === 0 ? `
+      <div class="glass-panel" style="text-align:center; padding:48px 24px; border-radius:16px; margin-bottom:30px;">
+        <div style="font-size:40px; margin-bottom:12px;">✉️</div>
+        <h3 style="font-family:var(--font-serif); font-size:22px; font-weight:400; margin-bottom:8px;">Adicione um imóvel primeiro</h3>
+        <p style="font-size:13px; color:var(--text-muted); max-width:440px; margin:0 auto 20px auto;">
+          Para poder convidar um inquilino, precisa de ter pelo menos uma fração registada no seu portfólio.
+        </p>
+        <button class="btn btn-primary" id="leases-add-prop-btn">
+          ${t("btn_add_property")}
+        </button>
+      </div>
+    ` : `
+      <div class="glass-table-wrapper" style="margin-bottom:40px;">
+        <table class="glass-table">
+          <thead>
+            <tr>
+              <th>${t("properties_title")} / Fração</th>
+              <th>Inquilino</th>
+              <th>${t("monthly_rent")} & ${t("deposit")}</th>
+              <th>${t("lease_period")}</th>
+              <th>${t("nif_number")} & ${t("verification_status")}</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${leases.length === 0 ? `
+              <tr><td colspan="6" style="text-align:center; padding:30px; color:var(--text-muted);">Sem contratos ativos registados.</td></tr>
+            ` : leases.map(lease => {
+              const prop = properties.find(p => p.id === lease.propertyId);
+              const unit = prop ? prop.units.find(u => u.id === lease.unitId) : null;
+              const tenant = users[lease.tenantId];
+              return `
+                <tr>
+                  <td>
+                    <div style="font-weight: 700;">${prop ? prop.name : 'Imóvel'}</div>
+                    <div style="font-size:11px; color: var(--text-muted);">${unit ? unit.number : 'Fração'}</div>
+                  </td>
+                  <td>
+                    <div style="font-weight:600;">${tenant ? tenant.name : 'Inquilino'}</div>
+                    <div style="font-size:11px; color:var(--text-muted);">${tenant ? tenant.email : ''}</div>
+                  </td>
+                  <td>
+                    <div style="font-weight:700;">€${lease.rent.toLocaleString()}/mês</div>
+                    <div style="font-size:11px; color:var(--text-muted);">${t("deposit")}: €${lease.deposit.toLocaleString()}</div>
+                  </td>
+                  <td style="font-size:12px;">${lease.startDate} a ${lease.endDate}</td>
+                  <td>
+                    <div style="font-size:11px; font-weight:600;">NIF: ${tenant && tenant.nif ? tenant.nif : 'Pendente'}</div>
+                    <span style="font-size:10px; color:#10b981; font-weight:700;">✓ IRS Verificado</span>
+                  </td>
+                  <td><span class="unit-pill ${lease.status === 'Active' ? 'occupied' : 'vacant'}">${lease.status}</span></td>
+                </tr>
+              `;
+            }).join("")}
+          </tbody>
+        </table>
+      </div>
+    `}
+
+    <!-- Convites Pendentes (Pending Invitations Section) -->
+    <div style="margin-top:32px;">
+      <h3 style="font-family:var(--font-serif); font-size:20px; font-weight:400; margin-bottom:16px;">Convites de Inquilinos Pendentes</h3>
+      <div class="glass-table-wrapper">
+        <table class="glass-table">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Nome & E-mail</th>
+              <th>Fração & Renda</th>
+              <th>Data de Envio</th>
+              <th>Estado</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${pendingInvites.length === 0 ? `
+              <tr><td colspan="6" style="text-align:center; padding:24px; color:var(--text-muted);">Nenhum convite pendente.</td></tr>
+            ` : pendingInvites.map(inv => {
+              const prop = properties.find(p => p.id === inv.propertyId);
+              const unit = prop ? prop.units.find(u => u.id === inv.unitId) : null;
+              const directLink = `${window.location.origin}${window.location.pathname}#/signup?code=${inv.code}`;
+              return `
+                <tr>
+                  <td><span style="font-family:monospace; font-weight:700; color:#10b981;">${inv.code}</span></td>
+                  <td>
+                    <div style="font-weight:600;">${inv.name}</div>
+                    <div style="font-size:11px; color:var(--text-muted);">${inv.email}</div>
+                  </td>
+                  <td>
+                    <div style="font-size:12px; font-weight:600;">${prop ? prop.name : ''} (${unit ? unit.number : ''})</div>
+                    <div style="font-size:11px; color:var(--text-muted);">€${inv.rentAmount}/mês</div>
+                  </td>
+                  <td style="font-size:12px;">${new Date(inv.createdAt).toLocaleDateString()}</td>
+                  <td><span class="unit-pill vacant">Pendente</span></td>
+                  <td>
+                    <button class="btn btn-secondary copy-pending-link-btn" data-link="${directLink}" style="font-size:11px; padding:6px 12px;">
+                      📋 Copiar Link
+                    </button>
+                  </td>
+                </tr>
+              `;
+            }).join("")}
+          </tbody>
+        </table>
+      </div>
     </div>
   `;
+
+  document.getElementById("leases-add-prop-btn")?.addEventListener("click", () => {
+    triggerAddPropertyModal(targetElement);
+  });
+
+  targetElement.querySelectorAll(".copy-pending-link-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const link = btn.getAttribute("data-link");
+      navigator.clipboard.writeText(link);
+      toast.show("Link de convite copiado para a área de transferência!", "success");
+    });
+  });
 
   document.getElementById("invite-renter-btn")?.addEventListener("click", () => {
     createDialog({
@@ -362,20 +481,68 @@ function renderLeasesTab(targetElement, properties, users, invitations) {
         <div class="form-row">
           <div class="form-group">
             <label for="invite-rent">Renda Mensal (€)</label>
-            <input type="number" id="invite-rent" name="rent" class="glass-input" required value="1800">
+            <input type="number" id="invite-rent" name="rent" class="glass-input" required value="1200">
           </div>
           <div class="form-group">
             <label for="invite-deposit">Caução (€)</label>
-            <input type="number" id="invite-deposit" name="deposit" class="glass-input" required value="3600">
+            <input type="number" id="invite-deposit" name="deposit" class="glass-input" required value="2400">
           </div>
         </div>
       `,
       submitLabel: t("btn_invite_tenant"),
       onSubmit: (data) => {
         const [propId, unitId] = data.unitKey.split("|");
-        const code = store.createInvitation({ ...data, propertyId: propId, unitId: unitId });
-        toast.show(`Convite gerado com código: ${code}`, "success");
-        renderOwnerView(targetElement.parentElement);
+        const newInvite = store.createInvitation({ ...data, propertyId: propId, unitId: unitId });
+        const inviteUrl = `${window.location.origin}${window.location.pathname}#/signup?code=${newInvite.code}`;
+
+        // Render interactive sent invitation email modal
+        const inviteModalOverlay = document.createElement("div");
+        inviteModalOverlay.className = "dialog-overlay";
+        inviteModalOverlay.innerHTML = `
+          <div class="dialog-content" style="max-width:540px; padding:0; overflow:hidden; border-radius:16px;">
+            <div style="background:#1c1a17; color:#ffffff; padding:20px 24px; display:flex; justify-content:space-between; align-items:center;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <span style="font-size:20px;">✉️</span>
+                <div>
+                  <h4 style="font-family:var(--font-serif); font-size:18px; font-weight:400; color:#fff; margin:0;">Convite Enviado por E-mail</h4>
+                  <span style="font-size:11px; color:rgba(255,255,255,0.7); font-family:var(--font-sans);">[Homely Automated Invitation Dispatch]</span>
+                </div>
+              </div>
+            </div>
+
+            <div style="padding:28px; background:#faf7f2;">
+              <div style="font-size:13px; color:var(--text-main); margin-bottom:16px; background:#fff; padding:12px 16px; border-radius:8px; border:1px solid var(--glass-border);">
+                <p style="margin-bottom:4px;"><strong>Para:</strong> ${newInvite.name} (&lt;${newInvite.email}&gt;)</p>
+                <p style="margin-bottom:0;"><strong>Assunto:</strong> [Homely] Convite para Arrendamento de Imóvel</p>
+              </div>
+
+              <div style="background:#ffffff; border:1px dashed var(--glass-border); padding:18px; border-radius:10px; text-align:center; margin-bottom:24px;">
+                <span style="font-size:10px; text-transform:uppercase; letter-spacing:0.15em; color:var(--text-muted); font-weight:700; display:block; margin-bottom:4px;">Código de Convite / Invite Code</span>
+                <span style="font-family:monospace; font-size:26px; font-weight:700; letter-spacing:0.15em; color:#10b981; display:block; margin-bottom:12px;">${newInvite.code}</span>
+
+                <span style="font-size:10px; text-transform:uppercase; letter-spacing:0.15em; color:var(--text-muted); font-weight:700; display:block; margin-bottom:6px;">Link Direto para o Inquilino Regista-se</span>
+                <input type="text" id="modal-invite-link-field" readonly class="glass-input" style="font-size:12px; font-family:monospace; text-align:center;" value="${inviteUrl}">
+              </div>
+
+              <div style="display:flex; gap:12px;">
+                <button id="modal-copy-link-btn" class="btn btn-secondary" style="flex:1; padding:12px;">📋 Copiar Link</button>
+                <button id="modal-close-invite-btn" class="btn btn-primary" style="flex:1; padding:12px;">Concluído</button>
+              </div>
+            </div>
+          </div>
+        `;
+
+        document.body.appendChild(inviteModalOverlay);
+
+        document.getElementById("modal-copy-link-btn").addEventListener("click", () => {
+          navigator.clipboard.writeText(inviteUrl);
+          toast.show("Link de convite copiado!", "success");
+        });
+
+        document.getElementById("modal-close-invite-btn").addEventListener("click", () => {
+          document.body.removeChild(inviteModalOverlay);
+          renderOwnerView(targetElement.closest(".dashboard-wrapper")?.parentElement || targetElement);
+        });
       }
     });
   });

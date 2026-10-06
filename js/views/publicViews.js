@@ -341,7 +341,7 @@ export function renderLoginView(container, navigateTo) {
       <form id="login-form">
         <div style="margin-bottom:28px;">
           <label class="editorial-label" for="login-email">Registered Email</label>
-          <input type="email" id="login-email" name="email" class="editorial-input" required placeholder="e.g. sarah.j@gmail.com">
+          <input type="email" id="login-email" name="email" class="editorial-input" required placeholder="e.g. user@domain.com">
         </div>
         <div style="margin-bottom:36px;">
           <label class="editorial-label" for="login-pw">Secure Password</label>
@@ -355,19 +355,6 @@ export function renderLoginView(container, navigateTo) {
       <div style="text-align:center; margin-top:28px; font-size:13px; font-family:var(--font-sans);">
         <span style="color:var(--text-muted);">New operator or resident?</span>
         <a href="#" id="auth-switch-signup" style="color:var(--text-main); text-decoration:underline; font-weight:600; margin-left:6px;">Create Account</a>
-      </div>
-
-      <!-- Presets -->
-      <div style="margin-top:40px; padding-top:24px; border-top:1px solid var(--glass-border); text-align:center;">
-        <span style="font-size:10px; text-transform:uppercase; font-weight:700; letter-spacing:0.15em; color:var(--text-muted); display:block; margin-bottom:16px;">Simulation Fast Access</span>
-        <div style="display:flex; flex-direction:column; gap:10px;">
-          <button class="btn btn-secondary preset-login-btn" data-email="marcus@sterlingprop.com" style="font-size:12px; padding:10px; width:100%;">
-            🔑 Landlord (Marcus)
-          </button>
-          <button class="btn btn-secondary preset-login-btn" data-email="sarah.j@gmail.com" style="font-size:12px; padding:10px; width:100%;">
-            🔑 Tenant (Sarah)
-          </button>
-        </div>
       </div>
     </div>
   `;
@@ -389,18 +376,8 @@ export function renderLoginView(container, navigateTo) {
       toast.show("Authenticated successfully!", "success");
       navigateTo("dashboard");
     } else {
-      toast.show("Invalid credentials. Try using preset accounts.", "error");
+      toast.show("Invalid credentials or unregistered email address. Please register first.", "error");
     }
-  });
-
-  // Bind Preset Quick Logins
-  container.querySelectorAll(".preset-login-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const email = btn.getAttribute("data-email");
-      store.login(email, "password");
-      toast.show("Preset authenticated!", "success");
-      navigateTo("dashboard");
-    });
   });
 }
 
@@ -440,7 +417,7 @@ export function renderSignupView(container, navigateTo) {
         ${activeInvite ? `<input type="hidden" name="role" value="tenant">` : ''}
 
         <div id="invite-code-group" style="margin-bottom:28px; display:${activeInvite || prefillCode ? 'block' : 'none'};">
-          <label class="editorial-label" for="signup-code">Invitation Code</label>
+          <label class="editorial-label" for="signup-code">Invitation Code (Optional)</label>
           <input type="text" id="signup-code" name="inviteCode" class="editorial-input" 
             placeholder="e.g. INV-123456" 
             value="${prefillCode}" 
@@ -452,7 +429,7 @@ export function renderSignupView(container, navigateTo) {
         <div style="margin-bottom:28px;">
           <label class="editorial-label" for="signup-name">Full Name</label>
           <input type="text" id="signup-name" name="name" class="editorial-input" required 
-            placeholder="e.g. John Doe"
+            placeholder="e.g. Maria Santos"
             value="${activeInvite ? activeInvite.name : ''}"
             ${activeInvite ? 'readonly' : ''}
           >
@@ -461,7 +438,7 @@ export function renderSignupView(container, navigateTo) {
         <div style="margin-bottom:28px;">
           <label class="editorial-label" for="signup-email">Email Address</label>
           <input type="email" id="signup-email" name="email" class="editorial-input" required 
-            placeholder="e.g. john@domain.com"
+            placeholder="e.g. maria@domain.pt"
             value="${activeInvite ? activeInvite.email : ''}"
             ${activeInvite ? 'readonly' : ''}
           >
@@ -520,8 +497,51 @@ export function renderSignupView(container, navigateTo) {
 
     try {
       const user = store.signup(name, email, password, role, inviteCode);
-      toast.show(`Account registered successfully. Welcome, ${user.name}!`, "success");
-      navigateTo("dashboard");
+      const confCode = `CONF-${Math.floor(100000 + Math.random() * 900000)}`;
+
+      // Render interactive email confirmation modal
+      const modalOverlay = document.createElement("div");
+      modalOverlay.className = "dialog-overlay";
+      modalOverlay.innerHTML = `
+        <div class="dialog-content" style="max-width:520px; padding:0; overflow:hidden; border-radius:16px;">
+          <div style="background:#1c1a17; color:#ffffff; padding:20px 24px; display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span style="font-size:20px;">✉️</span>
+              <div>
+                <h4 style="font-family:var(--font-serif); font-size:18px; font-weight:400; color:#fff; margin:0;">E-mail de Confirmação Enviado</h4>
+                <span style="font-size:11px; color:rgba(255,255,255,0.7); font-family:var(--font-sans);">[Homely Verification System]</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="padding:28px; background:#faf7f2;">
+            <p style="font-size:14px; margin-bottom:12px; color:var(--text-main);">
+              Olá <strong>${user.name}</strong>,
+            </p>
+            <p style="font-size:13px; color:var(--text-muted); line-height:1.5; margin-bottom:20px;">
+              Enviámos um e-mail de confirmação de conta para <strong>${user.email}</strong>. Por favor confirme o seu e-mail para ativar a sua conta de <strong>${user.role === 'owner' ? 'Senhorio / Proprietário' : 'Inquilino / Resident'}</strong>.
+            </p>
+
+            <div style="background:#ffffff; border:1px dashed var(--glass-border); padding:16px; border-radius:10px; text-align:center; margin-bottom:24px;">
+              <span style="font-size:10px; text-transform:uppercase; letter-spacing:0.15em; color:var(--text-muted); font-weight:700; display:block; margin-bottom:6px;">Código de Verificação / Confirmation Code</span>
+              <span style="font-family:monospace; font-size:26px; font-weight:700; letter-spacing:0.2em; color:var(--primary-color); display:block;">${confCode}</span>
+            </div>
+
+            <button id="confirm-email-modal-btn" class="btn btn-primary" style="width:100%; padding:14px; font-size:14px;">
+              ✓ Confirmar E-mail & Entrar no Painel
+            </button>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(modalOverlay);
+
+      document.getElementById("confirm-email-modal-btn").addEventListener("click", () => {
+        document.body.removeChild(modalOverlay);
+        toast.show(`E-mail confirmado com sucesso. Bem-vindo, ${user.name}!`, "success");
+        navigateTo("dashboard");
+      });
+
     } catch (err) {
       toast.show(err.message, "error");
     }

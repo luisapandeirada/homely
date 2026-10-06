@@ -18,7 +18,43 @@ export function renderTenantView(container) {
   const prop = properties.find(p => p.id === tenant.propertyId);
   const unit = prop ? prop.units.find(u => u.id === tenant.unitId) : null;
 
-  if (tenant.onboardingStatus === "Pending") {
+  // 1. Unlinked Resident (No invitation linked yet)
+  if (!tenant.propertyId || !prop || !unit) {
+    container.innerHTML = `
+      <div style="max-width:540px; margin:60px auto; padding:0 24px;">
+        <div class="glass-panel" style="padding:40px 32px; text-align:center; border-radius:16px;">
+          <div style="font-size:48px; margin-bottom:16px;">🔑</div>
+          <h3 style="font-family:var(--font-serif); font-size:26px; font-weight:400; margin-bottom:8px;">Vincular Convite de Arrendamento</h3>
+          <p style="font-size:14px; color:var(--text-muted); margin-bottom:28px; line-height:1.5;">
+            Insira o código de convite fornecido pelo seu senhorio (ex: <code>INV-123456</code>) para associar a sua fração e aceder ao contrato.
+          </p>
+          <form id="link-invite-form" style="display:flex; gap:12px; max-width:440px; margin:0 auto 20px auto;">
+            <input type="text" id="link-code-input" class="glass-input" required placeholder="INV-123456" style="text-align:center; font-family:monospace; font-size:18px; font-weight:700; letter-spacing:0.1em; flex:1;">
+            <button type="submit" class="btn btn-primary" style="padding:12px 24px; white-space:nowrap;">Vincular</button>
+          </form>
+          <p style="font-size:12px; color:var(--text-muted);">
+            Ainda não tem um código? Solicite o convite ao seu senhorio.
+          </p>
+        </div>
+      </div>
+    `;
+
+    document.getElementById("link-invite-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const code = document.getElementById("link-code-input").value;
+      try {
+        store.linkTenantInvitation(tenant.id, code);
+        toast.show("Convite de arrendamento vinculado com sucesso!", "success");
+        renderTenantView(container);
+      } catch (err) {
+        toast.show(err.message, "error");
+      }
+    });
+    return;
+  }
+
+  // 2. Pending Lease Agreement Signing Wizard
+  if (tenant.onboardingStatus === "PendingLease" || tenant.onboardingStatus === "Pending") {
     renderOnboardingWizard(container, tenant, prop, unit);
     return;
   }
@@ -164,7 +200,6 @@ export function renderTenantView(container) {
 
 function renderOnboardingWizard(container, tenant, prop, unit) {
   let step = 1;
-  let screeningCompleted = false;
 
   const renderWizard = () => {
     container.innerHTML = `
@@ -191,12 +226,12 @@ function renderOnboardingWizard(container, tenant, prop, unit) {
         <div style="text-align:center;">
           <div style="font-size:40px; margin-bottom:10px;">🛡️</div>
           <h3 style="font-size:18px; font-weight:700; margin-bottom:6px;">Verificação NIF & IRS Concluída</h3>
-          <p style="font-size:13px; color:var(--text-muted); margin-bottom:24px;">Os seus dados fiscais e comprovativo de rendimentos foram verificados.</p>
+          <p style="font-size:13px; color:var(--text-muted); margin-bottom:24px;">Os seus dados fiscais e comprovativo de rendimentos foram verificados para Portugal e UE.</p>
           
           <div style="display:flex; justify-content:center; gap:16px; margin-bottom:28px;">
             <div style="background:var(--glass-bg-accent); border:1px solid var(--glass-border); padding:16px; border-radius:8px; flex:1;">
               <span style="font-size:10px; font-weight:700; color:var(--text-muted); text-transform:uppercase; display:block;">Número NIF</span>
-              <span style="font-size:18px; font-weight:700; color:#10b981; font-family:var(--font-sans);">${tenant.nif || '248192039'}</span>
+              <span style="font-size:16px; font-weight:700; color:#10b981; font-family:var(--font-sans);">${tenant.nif || 'Verificado'}</span>
             </div>
             <div style="background:var(--glass-bg-accent); border:1px solid var(--glass-border); padding:16px; border-radius:8px; flex:1;">
               <span style="font-size:10px; font-weight:700; color:var(--text-muted); text-transform:uppercase; display:block;">IRS / Rendimentos</span>
@@ -214,32 +249,25 @@ function renderOnboardingWizard(container, tenant, prop, unit) {
         renderWizard();
       });
     } else if (step === 2) {
-      const draftLease = store.getLeases().find(l => l.tenantId === tenant.id && l.status === "Draft");
-      if (!draftLease) {
-        wizardContent.innerHTML = `
-          <div style="text-align:center;">
-            <p style="font-size:13px; color:var(--text-muted);">Nenhum rascunho de contrato pendente para esta fração. Contacte o senhorio.</p>
-          </div>
-        `;
-        return;
-      }
+      const rentAmount = unit ? unit.rent : 1200;
+      const depositAmount = rentAmount * 2;
 
       wizardContent.innerHTML = `
         <div>
           <h3 style="font-size:18px; font-weight:700; margin-bottom:8px;">Assinatura Digital do Contrato de Arrendamento</h3>
-          <p style="font-size:12px; color:var(--text-muted); margin-bottom:16px;">Por favor reveja as cláusulas do contrato e desenhe a sua assinatura abaixo.</p>
+          <p style="font-size:12px; color:var(--text-muted); margin-bottom:16px;">Por favor reveja as cláusulas do contrato e assine digitalmente abaixo.</p>
           
           <div style="background:var(--glass-bg-accent); border:1px solid var(--glass-border); padding:16px; border-radius:8px; max-height:160px; overflow-y:auto; font-size:12px; font-family:monospace; margin-bottom:20px;">
-            <h4 style="text-align:center; font-weight:700; margin-bottom:8px;">CLÁUSULAS DO CONTRATO</h4>
+            <h4 style="text-align:center; font-weight:700; margin-bottom:8px;">TERMOS DO CONTRATO DE ARRENDAMENTO</h4>
             <p><strong>1. IMÓVEL:</strong> ${unit ? unit.number : 'Fração'} em ${prop ? prop.name : 'Imóvel'}.</p>
-            <p><strong>2. RENDA MENSAL:</strong> €${draftLease.rent.toLocaleString()} por mês.</p>
-            <p><strong>3. CAUÇÃO:</strong> €${draftLease.deposit.toLocaleString()} na assinatura.</p>
-            <p><strong>4. DURAÇÃO:</strong> ${draftLease.startDate} a ${draftLease.endDate}.</p>
+            <p><strong>2. RENDA MENSAL:</strong> €${rentAmount.toLocaleString()} por mês.</p>
+            <p><strong>3. CAUÇÃO:</strong> €${depositAmount.toLocaleString()} na assinatura.</p>
+            <p><strong>4. DURAÇÃO:</strong> 12 Meses Renovável (Legislação Portuguesa).</p>
           </div>
 
           <form id="wizard-sign-form">
             <div class="form-group">
-              <label>Assinatura Digital</label>
+              <label>Assinatura Digital (Nome Completo)</label>
               <input type="text" id="sign-name-text" class="glass-input" required value="${tenant.name}">
             </div>
 
@@ -255,6 +283,7 @@ function renderOnboardingWizard(container, tenant, prop, unit) {
         const nameInput = document.getElementById("sign-name-text").value.trim();
         store.signLeaseAgreement(tenant.id, nameInput);
         toast.show("Contrato assinado com sucesso! Bem-vindo.", "success");
+        renderTenantView(container);
       });
     }
   };
