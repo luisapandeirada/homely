@@ -194,78 +194,87 @@ function renderNavbar(mountElement, user, navigateTo, theme, onThemeToggle, onLa
       </div>
     `;
 
-    // Bind language switcher buttons
-    mountElement.querySelectorAll(".lang-btn").forEach(btn => {
-      btn.addEventListener("click", () => {
-        const selectedLang = btn.getAttribute("data-lang");
-        if (selectedLang === getLang()) return;
-        setLang(selectedLang);
-        toast.show(selectedLang === "pt" ? "Idioma alterado para Português (PT)" : "Language set to English", "info");
-        if (onLanguageChange) onLanguageChange();
-      });
-    });
-
     // Bind Swapper
     const oTab = document.getElementById("nav-tab-owner");
     const tTab = document.getElementById("nav-tab-tenant");
 
-    oTab.addEventListener("click", () => {
-      if (user.role === "owner") return;
-      store.switchUser("owner_1");
-      toast.show("Switched to Landlord Marcus Profile", "success");
-      navigateTo("dashboard");
-    });
+    if (oTab) {
+      oTab.addEventListener("click", () => {
+        if (user.role === "owner") return;
+        store.switchUser("owner_1");
+        toast.show("Switched to Landlord Marcus Profile", "success");
+        navigateTo("dashboard");
+      });
+    }
 
-    tTab.addEventListener("click", () => {
-      if (user.role === "tenant") return;
-      const lastTenantId = store.getLastActiveTenantId();
-      if (!lastTenantId) {
-        toast.show("No active tenants registered in portfolio.", "warning");
-        return;
-      }
-      store.switchUser(lastTenantId);
-      const tenantName = store.getUsers()[lastTenantId]?.name || "Tenant";
-      toast.show(`Switched to Tenant ${tenantName.split(" ")[0]} Profile`, "success");
-      navigateTo("dashboard");
-    });
+    if (tTab) {
+      tTab.addEventListener("click", () => {
+        if (user.role === "tenant") return;
+        const lastTenantId = store.getLastActiveTenantId();
+        if (!lastTenantId) {
+          toast.show("No active tenants registered in portfolio.", "warning");
+          return;
+        }
+        store.switchUser(lastTenantId);
+        const tenantName = store.getUsers()[lastTenantId]?.name || "Tenant";
+        toast.show(`Switched to Tenant ${tenantName.split(" ")[0]} Profile`, "success");
+        navigateTo("dashboard");
+      });
+    }
+  }
 
-    // Bind Logout
-    document.getElementById("nav-logout-btn").addEventListener("click", () => {
+  // Bind Theme Button & Language Switcher for ALL states
+  const themeBtn = mountElement.querySelector("#nav-theme-btn");
+  if (themeBtn) {
+    themeBtn.addEventListener("click", onThemeToggle);
+  }
+
+  mountElement.querySelectorAll(".lang-btn").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const selectedLang = btn.getAttribute("data-lang");
+      if (selectedLang === getLang()) return;
+      setLang(selectedLang);
+      toast.show(selectedLang === "pt" ? "Idioma alterado para Português (PT)" : "Language set to English", "info");
+      if (onLanguageChange) onLanguageChange();
+    });
+  });
+
+  // Bind Logout
+  const logoutBtn = document.getElementById("nav-logout-btn");
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", () => {
       store.logout();
       toast.show("Logged out successfully.", "info");
       window.location.hash = "#/";
     });
+  }
 
-    // Bind Notifications popover toggler
-    const bellBtn = document.getElementById("nav-notifications-btn");
-    const popover = document.getElementById("nav-notifications-popover");
+  // Bind Notifications popover toggler
+  const bellBtn = document.getElementById("nav-notifications-btn");
+  const popover = document.getElementById("nav-notifications-popover");
 
+  if (bellBtn && popover) {
     bellBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       const isVisible = popover.style.display === "block";
       
-      // Close popover
       if (isVisible) {
         popover.style.display = "none";
-      } 
-      // Open popover, mark read
-      else {
+      } else {
         popover.style.display = "block";
         store.markNotificationsRead();
-        // Clear red dot count badge immediately without full route re-draw
         const badge = bellBtn.querySelector(".pulse-notification-dot");
         if (badge) badge.remove();
       }
     });
 
-    // Close notifications panel when clicking outside
     document.addEventListener("click", (e) => {
       if (popover && !popover.contains(e.target) && e.target !== bellBtn) {
         popover.style.display = "none";
       }
     });
-
-    document.getElementById("nav-theme-btn").addEventListener("click", onThemeToggle);
   }
 }
 
