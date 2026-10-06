@@ -79,6 +79,12 @@ export class EmailService {
           return { success: true, method: "Resend", data };
         } else {
           console.error("❌ Resend API Error:", data);
+          if (data.message && data.message.includes("You can only send testing emails")) {
+            if (typeof window !== "undefined" && window.alert) {
+              window.alert(`ℹ️ Nota de Teste Resend: A sua conta Resend (gratuita) está configurada para enviar e-mails APENAS para ${data.message.match(/\((.*?)\)/)?.[1] || 'o seu e-mail registado'}.\n\nPara enviar e-mails para qualquer destinatário, adicione o seu domínio em resend.com/domains.`);
+            }
+          }
+          return { success: false, method: "Resend", error: data.message || "Resend error" };
         }
       } catch (err) {
         console.error("Resend API failed:", err);
@@ -138,6 +144,12 @@ export class EmailService {
           return { success: true, method: "Resend", data };
         } else {
           console.error("❌ Resend API Error:", data);
+          if (data.message && data.message.includes("You can only send testing emails")) {
+            if (typeof window !== "undefined" && window.alert) {
+              window.alert(`ℹ️ Nota de Teste Resend: A sua conta Resend está em modo de teste e envia e-mails APENAS para ${data.message.match(/\((.*?)\)/)?.[1] || 'o seu e-mail registado'}.\n\nPara enviar convites a outros e-mails de inquilinos, configure o seu domínio em resend.com/domains.`);
+            }
+          }
+          return { success: false, method: "Resend", error: data.message || "Resend error" };
         }
       } catch (err) {
         console.error("Resend Tenant Invite API failed:", err);
