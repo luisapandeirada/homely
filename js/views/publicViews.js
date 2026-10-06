@@ -26,22 +26,22 @@ export function renderLandingView(container, navigateTo) {
   
   container.innerHTML = `
     <!-- Immersive Cover Hero (Alcove Architecture Style) -->
-    <section class="hero-section" style="position:relative; overflow:hidden; border-radius:16px; min-height:480px; display:flex; align-items:flex-end; background:linear-gradient(180deg, rgba(28,26,23,0.2) 0%, rgba(28,26,23,0.85) 100%), url('assets/property_modern.png') center/cover no-repeat; color:#ffffff; padding:56px 48px; margin-top:24px; margin-bottom:60px; box-shadow:var(--shadow-premium);">
-      <div style="max-width:720px; position:relative; z-index:2;">
-        <p style="font-family:var(--font-sans); font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.18em; color:rgba(255,255,255,0.75); margin-bottom:16px;">
+    <section class="hero-section" style="position:relative; width:100%; overflow:hidden; border-radius:20px; min-height:560px; display:flex; align-items:flex-end; background:linear-gradient(180deg, rgba(28,26,23,0.15) 0%, rgba(28,26,23,0.88) 100%), url('assets/property_modern.png') center/cover no-repeat; color:#ffffff; padding:72px 64px 64px 64px; margin-top:16px; margin-bottom:70px; box-shadow:var(--shadow-premium);">
+      <div style="max-width:840px; position:relative; z-index:2;">
+        <p style="font-family:var(--font-sans); font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:0.2em; color:rgba(255,255,255,0.8); margin-bottom:18px;">
           Property & Tenancy Management
         </p>
-        <h1 style="color:#ffffff; font-family:var(--font-serif); font-size:54px; font-weight:400; line-height:1.08; letter-spacing:-0.01em; margin-bottom:20px;">
+        <h1 style="color:#ffffff; font-family:var(--font-serif); font-size:64px; font-weight:400; line-height:1.06; letter-spacing:-0.015em; margin-bottom:22px;">
           Direct, simple management for your properties.
         </h1>
-        <p style="color:rgba(255,255,255,0.88); font-family:var(--font-sans); font-size:16px; line-height:1.6; margin-bottom:32px; font-weight:400; max-width:580px;">
+        <p style="color:rgba(255,255,255,0.9); font-family:var(--font-sans); font-size:18px; line-height:1.65; margin-bottom:36px; font-weight:400; max-width:660px;">
           A calm, quiet platform for property owners and residents. Clear financial tracking, direct rent payments, and simple maintenance coordination.
         </p>
-        <div class="cta-group" style="display:flex; gap:14px; align-items:center;">
-          <button class="btn btn-primary" id="landing-cta-owner" style="padding:12px 28px; font-size:13px; font-weight:600; border-radius:30px; background:#ffffff; color:#1c1a17; border:none; letter-spacing:0.02em;">
+        <div class="cta-group" style="display:flex; gap:16px; align-items:center;">
+          <button class="btn btn-primary" id="landing-cta-owner" style="padding:14px 32px; font-size:14px; font-weight:600; border-radius:30px; background:#ffffff; color:#1c1a17; border:none; letter-spacing:0.02em; cursor:pointer;">
             Landlord Portal
           </button>
-          <button class="btn btn-secondary" id="landing-cta-tenant" style="padding:12px 28px; font-size:13px; font-weight:500; border-radius:30px; background:rgba(255,255,255,0.15); color:#ffffff; border:1px solid rgba(255,255,255,0.3); backdrop-filter:blur(12px);">
+          <button class="btn btn-secondary" id="landing-cta-tenant" style="padding:14px 32px; font-size:14px; font-weight:500; border-radius:30px; background:rgba(255,255,255,0.18); color:#ffffff; border:1px solid rgba(255,255,255,0.35); backdrop-filter:blur(12px); cursor:pointer;">
             Tenant Sign In
           </button>
         </div>
